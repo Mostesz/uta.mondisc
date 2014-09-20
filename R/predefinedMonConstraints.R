@@ -16,8 +16,8 @@ addPredefinedMonConstraintsToLpModel = function(problem, lpmodel, isGainCase, cr
 }
 
 addPredefinedMonNormalizationToLpModel = function(problem, lpmodel, isGainCase, critIdx) {
-  stopifnot(criterionIdx>0);
-  stopifnot(criterionIdx<=problem$criteriaNumber);
+  stopifnot(critIdx>0);
+  stopifnot(critIdx<=problem$criteriaNumber);
   
   i = if (isGainCase) 1 else problem$alternativesNumber;
   currCriterionAlternativesValues = problem$alternativesValuesForCriteria[critIdx];

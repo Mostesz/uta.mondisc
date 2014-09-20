@@ -11,8 +11,8 @@ initLpModelObj = function(lpmodel) {
 
 addTypesToLpModel = function(lpmodel) {
   for (dataIdx in 1:length(lpmodel$matDataTypesValues)) {
-    dataNumber = lpmodel$matDataTypesValues[dataIdx]$size;
-    dataType = lpmodel$matDataTypesValues[dataIdx]$type;
+    dataNumber = lpmodel$matDataTypesValues[[dataIdx]]$size;
+    dataType = lpmodel$matDataTypesValues[[dataIdx]]$type;
     
     lpmodel$types = c(lpmodel$types, rep(dataType, dataNumber));
   }
@@ -35,7 +35,7 @@ addProblemConstraintsToLpModel = function(problem, lpmodel) {
   
   normToOneConstraintRow = initLpModelMatrixRow(lpmodel);
   for (critIdx in 1:problem$criteriaNumber) {
-    normToOneConstraintRow = setBestEvaluationOnCriteriaOnContraintRow(problem, normToOneConstraintRow, critIdx, 1);
+    normToOneConstraintRow = setBestEvaluationOnCriteriaOnContraintRow(problem, lpmodel, normToOneConstraintRow, critIdx, 1);
     
     switch(problem$margValueFuncShapes[critIdx],
            GAIN={
@@ -111,12 +111,12 @@ getIndexForDataTypeByAltIdx = function(problem, lpmodel, dataType, altIdx, critI
 
 getLpModelMatrixSizeForDataType = function(lpmodel, dataType = 'END') {
   validateDataType(lpmodel, dataType);
-  return(lpmodel$matDataTypesValues[dataType]$size);
+  return(lpmodel$matDataTypesValues[[dataType]]$size);
 }
 
 getLpModelMatrixRowStartIdx = function(lpmodel, dataType = 'END') {
   validateDataType(lpmodel, dataType);
-  return(lpmodel$matDataTypesStartIndexes[dataType]);
+  return(lpmodel$matDataTypesStartIndexes[[dataType]]);
 }
 
 getLpModelMatrixRowSize = function(lpmodel) {
@@ -127,7 +127,7 @@ validateDataType = function(lpmodel, dataType) {
   if (dataType != 'END') {
     type = match(dataType, lpmodel$matDataTypes);
     if (any(is.na(type))) {
-      stop("Argument 'dataType' must be either 'CHARACT_POINTS', 'NOT_PREDEFINED_MON_CHARACT_POINTS_GAIN_CASE', 'NOT_PREDEFINED_MON_CHARACT_POINTS_COST_CASE', 'NOT_PREDEFINED_MON_COST_BINARY_VARIABLES', 'A_AND_V_TYPE_BINARY_VARIABLES'.")
+      stop(paste("Argument 'dataType' must be either ", paste(lpmodel$matDataTypes,collapse=", ")));
     }
   }
 }

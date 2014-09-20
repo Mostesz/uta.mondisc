@@ -1,68 +1,134 @@
+validateAlternatives = function(alternatives) {
+  if (is.null(alternatives) || !is.matrix(alternatives)) {
+    stop("Argument 'alternatives' must be non-null matrix of criteria (arranged in columns) and alternatives values for criteria (in rows)")
+  }
+  if (!(nrow(alternatives) >= 3)) {
+    stop("Alternatives number must be greater or equals 3");
+  }
+}
+
+validateMargValueFuncShapes = function(margValueFuncShapes, criteriaNumber) {
+  criteriaTypes = c("GAIN", "COST", "NOT_PREDEFINED", "A_TYPE", "V_TYPE", "NON_MON");
+  if (is.null(margValueFuncShapes) || !is.vector(margValueFuncShapes)) {
+    stop("Argument 'margValueFuncShapes' must be non-null vector");
+  }
+  if (length(margValueFuncShapes) != criteriaNumber) {
+    stop("Argument 'margValueFuncShapes' must correspond to criteria number");
+  }
+  if (any(is.na(match(margValueFuncShapes, criteriaTypes)))) {
+    stop(paste("Argument 'margValueFuncShapes' must be a vector of either ", paste(criteriaTypes, collapse=", ")," for each criterion."), collapse="");
+  }
+}
+
+validateM = function(M) {
+  if (is.null(M) || !(M > 0)) {
+    stop("Argument 'M' must be greater than 0");
+  }
+}
+
+validateDMPreferences = function(strictPreferences, weakPreferences, indifferences, alternativesNumber) {
+  if (is.null(strictPreferences) && is.null(weakPreferences) && is.null(indifferences)) {
+    stop("Did not specified any preferences of DM");
+  }
+  
+  if (!((is.null(strictPreferences) || (is.matrix(strictPreferences) && ncol(strictPreferences) == 2))
+      && (is.null(weakPreferences) || (is.matrix(weakPreferences) && ncol(weakPreferences) == 2))
+      && (is.null(indifferences) || (is.matrix(indifferences) && ncol(indifferences) == 2)))) {
+    stop("Arguments 'strictPreferences', 'weakPreferences' and 'indifferences' must be NULL or two-column matrix");
+  }
+  
+  indifferentPairs = set();
+  if (!is.null(indifferences)) {
+    for (i in nrow(indifferences):1) {
+      if (indifferences[i,1] == indifferences[i,2]
+          || indifferences[i,1] < 1 || indifferences[i,1] > alternativesNumber
+          || indifferences[i,2] < 1 || indifferences[i,2] > alternativesNumber) {
+        stop("Argument 'indifferences' must consist of pairs of indexes corresponding to the two alternatives from a given set of alternatives");
+      } else if (set_contains_element(indifferentPairs, tuple(indifferences[i,1], indifferences[i,2]))
+                 || set_contains_element(indifferentPairs, tuple(indifferences[i,2], indifferences[i,1]))) {
+        indifferences = indifferences[-i:-i,];
+      } else {
+        indifferentPairs = set_union(indifferentPairs, tuple(indifferences[i,1], indifferences[i,2]))
+      }
+    }
+  }
+  
+  weakPreferencesPairs = set();
+  if (!is.null(weakPreferences)) {
+    for (i in nrow(weakPreferences):1) {
+      if (weakPreferences[i,1] == weakPreferences[i,2]
+          || weakPreferences[i,1] < 1 || weakPreferences[i,1] > alternativesNumber
+          || weakPreferences[i,2] < 1 || weakPreferences[i,2] > alternativesNumber) {
+        stop("Argument 'weakPreferences' must consist of pairs of indexes corresponding to the two alternatives from a given set of alternatives");
+      } else if (set_contains_element(weakPreferencesPairs, tuple(weakPreferences[i,1], weakPreferences[i,2]))) {
+        weakPreferences = weakPreferences[-i:-i,];
+      } else if (set_contains_element(indifferentPairs, tuple(weakPreferences[i,1], weakPreferences[i,2]))
+                 || set_contains_element(indifferentPairs, tuple(weakPreferences[i,2], weakPreferences[i,1]))) {
+        stop(paste("Inconsistency of DM preference information. 'indifferences' and 'weakPreferences' contain (",
+                   weakPreferences[i,1], ", ", weakPreferences[i,2], ") pair"), collapse="");
+      } else {
+        weakPreferencesPairs = set_union(weakPreferencesPairs, tuple(weakPreferences[i,1], weakPreferences[i,2]))
+      }
+    }
+  }
+  strictPreferencesPairs = set();
+  if (!is.null(strictPreferences)) {
+    for (i in nrow(strictPreferences):1) {
+      if (strictPreferences[i,1] == strictPreferences[i,2]
+          || strictPreferences[i,1] < 1 || strictPreferences[i,1] > alternativesNumber
+          || strictPreferences[i,2] < 1 || strictPreferences[i,2] > alternativesNumber) {
+        stop("Argument 'strictPreferences' must consist of pairs of indexes corresponding to the two alternatives from a given set of alternatives");
+      } else if (set_contains_element(strictPreferencesPairs, tuple(strictPreferences[i,1], strictPreferences[i,2]))) {
+        strictPreferences = strictPreferences[-i:-i,];
+      } else if (set_contains_element(strictPreferencesPairs, tuple(strictPreferences[i,2], strictPreferences[i,1]))) {
+        stop(paste("Inconsistency of DM preference information. 'strictPreferences' contains (", 
+                   strictPreferences[i,1], ", ", strictPreferences[i,2], ") and (",
+                   strictPreferences[i,2], ", ", strictPreferences[i,1], ") pairs"), collapse="");
+      } else if (set_contains_element(indifferentPairs, tuple(strictPreferences[i,1], strictPreferences[i,2]))
+                 || set_contains_element(indifferentPairs, tuple(strictPreferences[i,2], strictPreferences[i,1]))
+                 || set_contains_element(weakPreferencesPairs, tuple(strictPreferences[i,1], strictPreferences[i,2]))
+                 || set_contains_element(weakPreferencesPairs, tuple(strictPreferences[i,2], strictPreferences[i,1]))) {
+        stop(paste("Inconsistency of DM preference information. 'indifferences' or 'weakPreferences' contain (",
+                   strictPreferences[i,1], ", ", strictPreferences[i,2], ") pair of 'strictPreferences'"), collapse="");
+      } else {
+        strictPreferencesPairs = set_union(strictPreferencesPairs, tuple(strictPreferences[i,1], strictPreferences[i,2]))
+      }
+    }
+  }
+  
+  return (list(strictPreferences = strictPreferences,
+               weakPreferences = weakPreferences,
+               indifferences = indifferences))
+}
+
 #' @param alternatives Matrix of n alternatives. Each alternative represents row of m evaluation criteria.
 #' @param margValueFuncShapes Represents informations about shapes (monotonicity) of marginal value functions.
 #' Each element must be one of "GAIN", "COST", "NOT-PREDEFINED", "A-TYPE", "V-TYPE" or "NON-MON".
-buildProblem = function(alternatives, margValueFuncShapes, M) {
-  criteriaNumber = ncol(alternatives);
-  alternativesNumber = nrow(alternatives)
-  marginalFunctionsMons = match(margValueFuncShapes, c("GAIN", "COST", "NOT-PREDEFINED", "A-TYPE", "V-TYPE", "NON-MON"));
-  if (any(is.na(marginalFunctionsMons))) {
-    stop("Argument 'margValueFuncShapes' must be either 'GAIN', 'COST', 'NOT-PREDEFINED', 'A-TYPE', 'V-TYPE' or 'NON-MON'.")
-  }
-  if (!(alternativesNumber >= 3)) stop("Alternatives number must be greater or equals 3");
-  if (!(M > 0)) stop("Argument 'M' must be greater than 0");
+buildProblem = function(alternatives, margValueFuncShapes, M, strictPreferences = NULL, weakPreferences = NULL, indifferences = NULL) {
+  validateAlternatives(alternatives);
   
-  return (list(alternatives = alternatives,
+  criteriaNumber = ncol(alternatives);
+  alternativesNumber = nrow(alternatives);
+  
+  validateMargValueFuncShapes(margValueFuncShapes, criteriaNumber);
+  validateM(M);
+  dmPreferences = validateDMPreferences(strictPreferences, weakPreferences, indifferences, alternativesNumber);
+  
+  problem = list(alternatives = alternatives,
                criteriaNumber = criteriaNumber,
                alternativesNumber = alternativesNumber,
                margValueFuncShapes = margValueFuncShapes,
                alternativesValuesForCriteria = NULL,
-               strictPreferences = NULL,
-               weakPreferences = NULL,
-               indifferences = NULL,
-               M = M))
-}
+               strictPreferences = dmPreferences$strictPreferences,
+               weakPreferences = dmPreferences$weakPreferences,
+               indifferences = dmPreferences$indifferences,
+               M = M);
+  problem = createIncreasinglyOrderedValuesForAlternatives(problem);
 
-addStrictPreferences = function(problem, ...) {
-  if ()
-  
-  problem$strictPreferences = addElementsToMat(problem$strictPreferences, 2, ..., DISTINCT = TRUE);
   return(problem);
 }
 
-deleteStrictPreferences = function(problem, ...) {
-  problem$strictPreferences = deleteElementsFromMat(problem$strictPreferences, 2, ..., DISTINCT = TRUE);
-  return(problem); 
-}
-
-addWeakPreferences = function(problem, ...) {
-  problem$weakPreferences = addElementsToMat(problem$weakPreferences, 2, ..., DISTINCT = TRUE);
-  return(problem);
-}
-
-deleteWeakPreferences = function(problem, ...) {
-  problem$weakPreferences = deleteElementsFromMat(problem$weakPreferences, 2, ..., DISTINCT = TRUE);
-  return(problem);
-}
-
-addIndifferences = function(problem, ...) {
-  problem$indifferences = addElementsToMat(problem$indifferences, 2, ..., DISTINCT = TRUE);
-  return(problem);
-}
-
-deleteIndifferences = function(problem, ...) {
-  problem$indifferences = deleteElementsFromMat(problem$indifferences, 2, ..., DISTINCT = TRUE);
-  return(problem);
-}
-
-calcSolution = function(problem) {
-  if (strictPreferences == NULL && weakPreferences == NULL && indifferences == NULL
-      && length(strictPreferences) == 0 && length(weakPreferences) == 0 && length(indifferences) == 0) {
-    stop('DM preference information was not provided.')
-  }
-  
-  lpmodel = initLpModel(problem);
-  
-  #creating increasingly ordered values of Xj
+createIncreasinglyOrderedValuesForAlternatives = function(problem) {
   problem$alternativesValuesForCriteria = list();
   criteriaNumber = problem$criteriaNumber;
   alternativesNumber = problem$alternativesNumber;
@@ -77,8 +143,11 @@ calcSolution = function(problem) {
     problem$alternativesValuesForCriteria = append(problem$alternativesValuesForCriteria, list(currCriterionAltValues));
   }
   
-  #TODO add validation for strictPreferences, weakPreferences, indifferences (inconsistency)
-  
+  return(problem);
+}
+
+calcSolution = function(problem) {
+  lpmodel = initLpModel(problem);  
   lpmodel = addProblemConstraintsToLpModel(problem, lpmodel);
   
   lpresult = Rglpk_solve_LP(lpmodel$obj, lpmodel$mat, lpmodel$dir, lpmodel$rhs, types = lpmodel$types, max = lpmodel$max);
@@ -88,13 +157,13 @@ calcSolution = function(problem) {
 
 ###
 
-initLpModel = function() {
+initLpModel = function(problem) {
   matDataTypes = initMatDataTypes();
   matDataTypesValues = initMatDataTypesValues(problem);
   matDataTypesStartIndexes = initMatDataTypesStartIndexes(matDataTypes, matDataTypesValues);
   lpmodel = list(
     obj = NULL,
-    mat = matrix(),
+    mat = NULL,
     dir = c(),
     rhs = c(),
     types = c(),
@@ -188,7 +257,7 @@ initMatDataTypesStartIndexes = function(matDataTypes, matDataTypesValues) {
     if (currType == 'END') {
       break;
     }
-    index = index + matDataTypesValues[currType]$size;
+    index = index + matDataTypesValues[[currType]]$size;
   }
   return(indexes);
 }

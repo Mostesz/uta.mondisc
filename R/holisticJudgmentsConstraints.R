@@ -2,9 +2,9 @@ addHolisticJudgmentsConstraintsToLpModel = function(problem, lpmodel, preference
   for (prefIdx in nrow(preferences)) {
     constraintRow = initLpModelMatrixRow(lpmodel);
     for (altIdx in 1:problem$alternativesNumber) {
-      if (preferences[prefIdx,0] == altIdx) {
+      if (preferences[prefIdx, 1] == altIdx) {
         constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, altIdx, 1);
-      } else if (preferences[prefIdx,1] == altIdx) {
+      } else if (preferences[prefIdx,2] == altIdx) {
         constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, altIdx, -1);
       } else {
         constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, altIdx, 0)
