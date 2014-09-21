@@ -84,7 +84,7 @@ getIndexForDataTypeByCritAndAltIdx = function(problem, lpmodel, dataType, altIdx
   startIdx = getLpModelMatrixRowStartIdx(lpmodel, dataType);
   i = problem$criteriaNumber * (altIdx - startAltIdx) + critIdx;
   
-  return(startIdx + i);
+  return(startIdx + i - 1);
 }
 
 getIndexForDataTypeByCritIdx = function(problem, lpmodel, dataType, critIdx,
@@ -95,7 +95,7 @@ getIndexForDataTypeByCritIdx = function(problem, lpmodel, dataType, critIdx,
   startIdx = getLpModelMatrixRowStartIdx(lpmodel, dataType);
   i = critIdx;
   
-  return(startIdx + i);
+  return(startIdx + i - 1);
 }
 
 getIndexForDataTypeByAltIdx = function(problem, lpmodel, dataType, altIdx, critIdx,
@@ -106,7 +106,7 @@ getIndexForDataTypeByAltIdx = function(problem, lpmodel, dataType, altIdx, critI
   startIdx = getLpModelMatrixRowStartIdx(lpmodel, dataType);
   i = altIdx;
   
-  return(startIdx + i);
+  return(startIdx + i - 1);
 }
 
 getLpModelMatrixSizeForDataType = function(lpmodel, dataType = 'END') {
@@ -120,7 +120,7 @@ getLpModelMatrixRowStartIdx = function(lpmodel, dataType = 'END') {
 }
 
 getLpModelMatrixRowSize = function(lpmodel) {
-  return(getLpModelMatrixRowStartIdx(lpmodel));
+  return(getLpModelMatrixRowStartIdx(lpmodel)-1);
 }
 
 validateDataType = function(lpmodel, dataType) {

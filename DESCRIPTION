@@ -1,12 +1,15 @@
 Package: uta.mondisc
 Type: Package
 Title: Inferring additive value functions with unknown monotonicity
-Version: 0.1
-Date: 2014-09-17
+Version: 0.1-1
+Date: 2014-08-02
 Author: Jakub Wasikowski
 Maintainer: Jakub Wasikowski <jakub.wasikowski@gmail.com>
-URL: TODO
-Depends: Rglpk (>= 0.5-1)
+URL: https://github.com/Mostesz/uta.mondisc
+Depends:
+    Rglpk (>= 0.5-1),
+    sets (>= 1.0-13)
 Description: TODO
 License: TODO
-Suggests: testthat (>= 0.7.1)
+Suggests:
+    testthat (>= 0.7.1)
