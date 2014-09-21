@@ -1,8 +1,8 @@
 addNotPredefinedMonConstraintsToLpModel = function(problem, lpmodel, critIdx) {
-  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[critIdx];
+  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
   for (i in 1:problem$alternativesNumber) {
-    altIdx = currCriterionAlternativesValues$index[i];
-    prevAltIdx = currCriterionAlternativesValues$index[i - 1];
+    altIdx = currCriterionAlternativesValues[i, 'index'];
+    prevAltIdx = currCriterionAlternativesValues[i - 1, 'index'];
     
     constraintRow = initLpModelMatrixRow(lpmodel);
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, 1);
@@ -69,11 +69,13 @@ getNotPredefinedMonCostBinaryVarFromConstraintRow = function(problem, lpmodel, c
 }
 
 addNotPredefinedMonNormalizationToLpModel = function(problem, lpmodel, critIdx) {
-  stopifnot(criterionIdx>0);
-  stopifnot(criterionIdx<=problem$criteriaNumber);
+  stopifnot(critIdx>0);
+  stopifnot(critIdx<=problem$criteriaNumber);
   
-  lastAltIdx = currCriterionAlternativesValues$index[problem$alternativesNumber];
-  firstAltIdx = currCriterionAlternativesValues$index[1];
+  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
+  
+  lastAltIdx = currCriterionAlternativesValues[problem$alternativesNumber, 'index'];
+  firstAltIdx = currCriterionAlternativesValues[1, 'index'];
   
   # Normalization to zero  
   constraintRow = initLpModelMatrixRow(lpmodel);

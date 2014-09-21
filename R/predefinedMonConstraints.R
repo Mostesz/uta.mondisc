@@ -1,8 +1,8 @@
 addPredefinedMonConstraintsToLpModel = function(problem, lpmodel, isGainCase, critIdx, dir) {  
-  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[critIdx];
+  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
   for (i in 2:problem$alternativesNumber) {
-    altIdx = currCriterionAlternativesValues$index[i];
-    prevAltIdx = currCriterionAlternativesValues$index[i - 1];
+    altIdx = currCriterionAlternativesValues[i, 'index'];
+    prevAltIdx = currCriterionAlternativesValues[i - 1, 'index'];
     
     constraintRow = initLpModelMatrixRow(lpmodel);
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, 1);
@@ -20,10 +20,10 @@ addPredefinedMonNormalizationToLpModel = function(problem, lpmodel, isGainCase, 
   stopifnot(critIdx<=problem$criteriaNumber);
   
   i = if (isGainCase) 1 else problem$alternativesNumber;
-  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[critIdx];
-  altIdx = currCriterionAlternativesValues$index[i];
-  bestAltIdx = if (isGainCase) currCriterionAlternativesValues$index[problem$alternativesNumber]
-               else currCriterionAlternativesValues$index[1];
+  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
+  altIdx = currCriterionAlternativesValues[i, 'index'];
+  bestAltIdx = if (isGainCase) currCriterionAlternativesValues[problem$alternativesNumber, 'index']
+               else currCriterionAlternativesValues[1, 'index'];
   
   # Normalization to zero  
   constraintRow = initLpModelMatrixRow(lpmodel);

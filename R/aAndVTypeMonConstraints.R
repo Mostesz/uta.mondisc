@@ -1,6 +1,6 @@
 addObjForAAndVTypeToLpModel = function(problem, lpmodel, critIdx) {
-  stopifnot(criterionIdx>0);
-  stopifnot(criterionIdx<=problem$criteriaNumber);
+  stopifnot(critIdx>0);
+  stopifnot(critIdx<=problem$criteriaNumber);
   
   for (p in 2:problem$alternativesNumber) {
     lpmodel$obj = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, lpmodel$obj, p, critIdx, 1);
@@ -9,16 +9,16 @@ addObjForAAndVTypeToLpModel = function(problem, lpmodel, critIdx) {
 }
 
 addAAndVTypeMonConstraintsToLpModel = function(problem, lpmodel, isAType, critIdx) {
-  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[critIdx];
+  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
   for (i in 2:problem$alternativesNumber) {
-    altIdx = currCriterionAlternativesValues$index[i];
-    prevAltIdx = currCriterionAlternativesValues$index[i - 1];
+    altIdx = currCriterionAlternativesValues[i, 'index'];
+    prevAltIdx = currCriterionAlternativesValues[i - 1, 'index'];
     binAndRhsValue = if (isAType) problem$M else -problem$M;
     
     dir = if (isAType) '>=' else '<=';
     constraintRow = initLpModelMatrixRow(lpmodel);
     for (p in 2:i) {
-      constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, p, critIdx, binVarValue);
+      constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, p, critIdx, binAndRhsValue);
     }
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, 1);
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, prevAltIdx, critIdx, -1);
@@ -29,7 +29,7 @@ addAAndVTypeMonConstraintsToLpModel = function(problem, lpmodel, isAType, critId
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, 1);
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, prevAltIdx, critIdx, -1);
     for (p in 2:i) {
-      constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, p, critIdx, binVarValue);
+      constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, p, critIdx, binAndRhsValue);
     }
     lpmodel = addConstraintToLpModel(lpmodel, constraintRow, dir, binAndRhsValue);
   }
@@ -44,27 +44,25 @@ addAAndVTypeMonConstraintsToLpModel = function(problem, lpmodel, isAType, critId
 }
 
 setAAndVTypeMonBinaryVarOnConstraintRow = function(problem, lpmodel, constraintRow, altIdx, critIdx, value) {
-  i = getIndexForDataTypeByCritAndAltIdx(problem, lpmodel, 'A_AND_V_TYPE_BINARY_VARIABLES', altIdx, critIdx,
-                                                startAltIdx = 2);
-  constraintRow[startIdx + i] = value;
+  i = getIndexForDataTypeByCritAndAltIdx(problem, lpmodel, 'A_AND_V_TYPE_BINARY_VARIABLES', altIdx, critIdx);
+  constraintRow[i] = value;
   
   return(constraintRow);
 }
 
-getAAndVTypeMonBinaryVarFromConstraintRow = function(problem, lpmodel, constraintRow, alternativeIdx, criterionIdx) {
-  i = getIndexForDataTypeByCritAndAltIdx(problem, lpmodel, 'A_AND_V_TYPE_BINARY_VARIABLES', altIdx, critIdx,
-                                         startAltIdx = 2);
+getAAndVTypeMonBinaryVarFromConstraintRow = function(problem, lpmodel, constraintRow, altIdx, critIdx) {
+  i = getIndexForDataTypeByCritAndAltIdx(problem, lpmodel, 'A_AND_V_TYPE_BINARY_VARIABLES', altIdx, critIdx);
   
   return(constraintRow[i]);
 }
 
 addATypeMonNormalizationToLpModel = function(problem, lpmodel, critIdx) {
-  stopifnot(criterionIdx>0);
-  stopifnot(criterionIdx<=problem$criteriaNumber);
+  stopifnot(critIdx>0);
+  stopifnot(critIdx<=problem$criteriaNumber);
   
-  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[critIdx];
-  lastAltIdx = currCriterionAlternativesValues$index[problem$alternativesNumber];
-  firstAltIdx = currCriterionAlternativesValues$index[1];
+  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
+  lastAltIdx = currCriterionAlternativesValues[problem$alternativesNumber, 'index'];
+  firstAltIdx = currCriterionAlternativesValues[1, 'index'];
   
   # Normalization to zero
   constraintRow = initLpModelMatrixRow(lpmodel);
@@ -98,8 +96,8 @@ addATypeMonNormalizationToLpModel = function(problem, lpmodel, critIdx) {
   constraintRowNo4 = setBestEvaluationOnCriteriaOnContraintRow(problem, lpmodel, constraintRowNo4, critIdx, 1);
   constraintRowNo4 = setCharacPointOnConstraintRow(problem, lpmodel, constraintRowNo4, lastAltIdx, critIdx, -1);
   for (i in 2:(problem$alternativesNumber)) {
-    altIdx = currCriterionAlternativesValues$index[i];
-    prevAltIdx = currCriterionAlternativesValues$index[i - 1];
+    altIdx = currCriterionAlternativesValues[i, 'index'];
+    prevAltIdx = currCriterionAlternativesValues[i - 1, 'index'];
     
     constraintRow = initLpModelMatrixRow(lpmodel);
     constraintRow = setBestEvaluationOnCriteriaOnContraintRow(problem, lpmodel, constraintRow, critIdx, 1);
@@ -124,17 +122,17 @@ addATypeMonNormalizationToLpModel = function(problem, lpmodel, critIdx) {
 }
 
 addVTypeMonNormalizationToLpModel = function(problem, lpmodel, critIdx) {
-  stopifnot(criterionIdx>0);
-  stopifnot(criterionIdx<=problem$criteriaNumber);
+  stopifnot(critIdx>0);
+  stopifnot(critIdx<=problem$criteriaNumber);
   
-  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[critIdx];
-  firstAltIdx = currCriterionAlternativesValues$index[1];
-  lastAltIdx = currCriterionAlternativesValues$index[problem$alternativesNumber];
+  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
+  firstAltIdx = currCriterionAlternativesValues[1, 'index'];
+  lastAltIdx = currCriterionAlternativesValues[problem$alternativesNumber, 'index'];
   
   # Normalization to zero
   for (i in 1:problem$alternativesNumber) {
-    altIdx = currCriterionAlternativesValues$index[i];
-    prevAltIdx = currCriterionAlternativesValues$index[i - 1];
+    altIdx = currCriterionAlternativesValues[i, 'index'];
+    prevAltIdx = currCriterionAlternativesValues[i - 1, 'index'];
     
     constraintRow = initLpModelMatrixRow(lpmodel);
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, prevAltIdx, critIdx, 1);

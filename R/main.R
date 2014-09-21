@@ -213,15 +213,15 @@ initMatDataTypesValues = function(problem) {
       type = 'B'
     ),
     A_AND_V_TYPE_BINARY_VARIABLES = list(
-      size = (problem$alternativesNumber - 1)  * problem$criteriaNumber,
+      size = problem$alternativesNumber  * problem$criteriaNumber,
       type = 'B'
     ),
     MON_DIRECTION_BINARY_VARIABLES = list(
-      size = (problem$alternativesNumber - 1)  * problem$criteriaNumber,
+      size = problem$alternativesNumber  * problem$criteriaNumber,
       type = 'B'
     ),
     CHANGE_MON_BINARY_VARIABLES = list(
-      size = (problem$alternativesNumber - 2)  * problem$criteriaNumber,
+      size = problem$alternativesNumber  * problem$criteriaNumber,
       type = 'B'
     ),
     A_TYPE_NORMALIZATION_ZERO_BINARY_VARIABLES = list(
