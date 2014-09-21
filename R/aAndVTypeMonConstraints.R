@@ -130,7 +130,7 @@ addVTypeMonNormalizationToLpModel = function(problem, lpmodel, critIdx) {
   lastAltIdx = currCriterionAlternativesValues[problem$alternativesNumber, 'index'];
   
   # Normalization to zero
-  for (i in 1:problem$alternativesNumber) {
+  for (i in 2:problem$alternativesNumber) {
     altIdx = currCriterionAlternativesValues[i, 'index'];
     prevAltIdx = currCriterionAlternativesValues[i - 1, 'index'];
     
