@@ -226,16 +226,5 @@ test_that("lpmodel should be generated for full example problem", {
   
   lpmodel = initLpModel(problem);
   lpmodel = addProblemConstraintsToLpModel(problem, lpmodel);
-  
-#   for (i in 1:length(lpmodel$matDataTypes)) {
-#     currType = lpmodel$matDataTypes[i];
-#     startIdx = matDataTypesStartIndexes[[currType]];
-#     size = matDataTypesValues[[currType]]$size;
-#     print("lol");
-#     print(startIdx);
-#     print(size);
-#     
-#     write.csv(lpmodel$mat[,startIdx:(startIdx + size-1)], file = currType)
-#   }
 })
 
