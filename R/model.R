@@ -20,6 +20,12 @@ addTypesToLpModel = function(lpmodel) {
   return(lpmodel);
 }
 
+forbidSolution = function(lpmodel, solution) {
+  lpmodel = addConstraintToLpModel(lpmodel, solution, '<=', sum(solution) - 1);
+  
+  return(lpmodel);
+}
+
 addConstraintToLpModel = function(lpmodel, constraintRow, dir, rhs) {
   lpmodel$mat = addElementsToMatrix(lpmodel$mat, length(constraintRow), constraintRow);
   lpmodel$dir = c(lpmodel$dir, dir);

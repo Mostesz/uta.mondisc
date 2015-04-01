@@ -105,10 +105,35 @@ buildProblem = function(alternatives, margValueFuncShapes, M, strictPreferences 
 calcSolution = function(problem) {
   lpmodel = initLpModel(problem);  
   lpmodel = addProblemConstraintsToLpModel(problem, lpmodel);
+  i = 0;
+  solutionsMat = NULL;
+  repeat{
+    lpresult = Rglpk_solve_LP(lpmodel$obj, lpmodel$mat, lpmodel$dir, lpmodel$rhs, types = lpmodel$types, max = lpmodel$max);
+    lpmodel = forbidSolution(lpmodel, lpresult$solution);
+    
+    if (lpresult$status != 0) {
+      break;
+    }
+    
+    solutionsMat = addElementsToMatrix(solutionsMat, length(lpresult$solution), lpresult$solution);
+    i = i+1;
+  }
   
-  lpresult = Rglpk_solve_LP(lpmodel$obj, lpmodel$mat, lpmodel$dir, lpmodel$rhs, types = lpmodel$types, max = lpmodel$max);
+  print(i);
+  print(solutionsMat);
   
   return(lpresult);
+}
+
+printSolution = function(lpmodel, solution) {
+  for (dataType in lpmodel$matDataTypes) {
+    startIdx = lpmodel$matDataTypesStartIndexes[[dataType]];
+    endIdx = lpmodel$matDataTypesValues[[dataType]]$size + startIdx - 1;
+    print(dataType);
+    print(solution[startIdx:endIdx]);
+    print("");
+  }
+  print("");
 }
 
 ### INITIALIZATION
