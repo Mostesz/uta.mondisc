@@ -228,3 +228,20 @@ test_that("lpmodel should be generated for full example problem", {
   lpmodel = addProblemConstraintsToLpModel(problem, lpmodel);
 })
 
+test_that("simple example", {
+  alternatives = matrix(c(100, 0,
+                          0, 50,
+                          0, 51), ncol = 2, byrow=TRUE);
+  margValueFuncShapes = c("GAIN", "COST");
+  M = 1000000;
+  
+  strictPreferences = matrix(c(1,2), ncol=2, byrow=TRUE);
+  
+  problem = buildProblem (
+    alternatives,
+    margValueFuncShapes,
+    M,
+    strictPreferences = strictPreferences
+  )
+})
+

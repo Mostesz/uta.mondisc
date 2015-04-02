@@ -115,14 +115,76 @@ calcSolution = function(problem) {
       break;
     }
     
+    printSolution(lpmodel, lpresult$solution);
+    readline()
+    
     solutionsMat = addElementsToMatrix(solutionsMat, length(lpresult$solution), lpresult$solution);
     i = i+1;
   }
   
+  additiveValueFunctions = calcAdditiveValueFunctions(problem, solutionsMat);
+  preferenceRelations = getPossibleAndNecessaryRelations(additiveValueFunctions);
+  
+  print("Solutions number:");
   print(i);
+  print("Solutions matrix:");
   print(solutionsMat);
   
-  return(lpresult);
+  print("Additive value functions:");
+  print(additiveValueFunctions);
+  
+  print("Possible relations:");
+  print(preferenceRelations$possible);
+  print("Necessary relations:");
+  print(preferenceRelations$necessary);
+}
+
+getPossibleAndNecessaryRelations = function(additiveValueFunctions) {
+  possibleRelations = list();
+  necessaryRelations = list();
+  
+  for (i in 1:ncol(additiveValueFunctions)) {
+    for (j in 1:ncol(additiveValueFunctions)) {
+      if (i != j) {
+        foundPossibleRelation = FALSE;
+        foundNecessaryRelation = TRUE;
+        
+        for (solIdx in 1:nrow(additiveValueFunctions)) {
+          utilityA = additiveValueFunctions[solIdx, i];
+          utilityB = additiveValueFunctions[solIdx, j];
+          if(utilityA >= utilityB) {
+            foundPossibleRelation = TRUE;
+          }
+          if (utilityB > utilityA) {
+            foundNecessaryRelation = FALSE;
+          }
+        }
+        
+        if (foundPossibleRelation) {
+          possibleRelations = append(possibleRelations, list(c(i, j)));
+        }
+        if (foundNecessaryRelation) {
+          necessaryRelations = append(necessaryRelations, list(c(i, j)));
+        }
+      }
+    }
+  }
+  
+  return(list("possible" = possibleRelations, "necessary" = necessaryRelations));
+}
+
+calcAdditiveValueFunctions = function(problem, solutionsMat) {
+  additiveValueFunctions = matrix(nrow = nrow(solutionsMat), ncol = problem$alternativesNumber);
+  for (solutionIdx in 1:nrow(solutionsMat)) {
+    for (altIdx in 1:problem$alternativesNumber) {
+      alternativeValue = 0;
+      for (critIdx in 1:problem$criteriaNumber) {
+        alternativeValue = alternativeValue + solutionsMat[solutionIdx, problem$criteriaNumber * (altIdx-1) + critIdx];
+      }
+      additiveValueFunctions[solutionIdx, altIdx] = alternativeValue;
+    }
+  }
+  return(additiveValueFunctions);
 }
 
 printSolution = function(lpmodel, solution) {

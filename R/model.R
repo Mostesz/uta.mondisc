@@ -21,7 +21,16 @@ addTypesToLpModel = function(lpmodel) {
 }
 
 forbidSolution = function(lpmodel, solution) {
-  lpmodel = addConstraintToLpModel(lpmodel, solution, '<=', sum(solution) - 1);
+  constraint = vector(mode = 'numeric', length = length(solution));
+  for (dataType in c('A_AND_V_TYPE_BINARY_VARIABLES', 'CHANGE_MON_BINARY_VARIABLES')) {
+    startIdx = getLpModelMatrixRowStartIdx(lpmodel, dataType);
+    endIdx = getLpModelMatrixSizeForDataType(lpmodel, dataType) + startIdx - 1;
+    for (i in startIdx:endIdx) {
+      constraint[i] = solution[i];
+    }
+  }
+    
+  lpmodel = addConstraintToLpModel(lpmodel, constraint, '<=', sum(constraint) - 1);
   
   return(lpmodel);
 }
