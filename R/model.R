@@ -44,9 +44,9 @@ addConstraintToLpModel = function(lpmodel, constraintRow, dir, rhs) {
 }
 
 addProblemConstraintsToLpModel = function(problem, lpmodel) {
-  addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$strictPreferences, '>');
-  addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$weakPreferences, '>=');
-  addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$indifferences, '==');
+  lpmodel = addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$strictPreferences, '>');
+  lpmodel = addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$weakPreferences, '>=');
+  lpmodel = addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$indifferences, '==');
   
   normToOneConstraintRow = initLpModelMatrixRow(lpmodel);
   for (critIdx in 1:problem$criteriaNumber) {
@@ -113,7 +113,7 @@ getIndexForDataTypeByCritIdx = function(problem, lpmodel, dataType, critIdx,
   return(startIdx + i - 1);
 }
 
-getIndexForDataTypeByAltIdx = function(problem, lpmodel, dataType, altIdx, critIdx,
+getIndexForDataTypeByAltIdx = function(problem, lpmodel, dataType, altIdx,
                                               startAltIdx = 1, endAltIdx = problem$alternativesNumber) {
   stopifnot(altIdx  >= startAltIdx);
   stopifnot(altIdx  <= endAltIdx);

@@ -1,24 +1,20 @@
 addHolisticJudgmentsConstraintsToLpModel = function(problem, lpmodel, preferences, dir) {
-  for (prefIdx in nrow(preferences)) {
-    constraintRow = initLpModelMatrixRow(lpmodel);
-    for (altIdx in 1:problem$alternativesNumber) {
-      if (preferences[prefIdx, 1] == altIdx) {
-        constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, altIdx, 1);
-      } else if (preferences[prefIdx,2] == altIdx) {
-        constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, altIdx, -1);
-      } else {
-        constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, altIdx, 0)
-      }
+  if (!is.null(preferences) && nrow(preferences) > 0) {
+    for (prefIdx in 1:nrow(preferences)) {
+      constraintRow = initLpModelMatrixRow(lpmodel);
+      
+      constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, preferences[prefIdx, 1], 1);
+      constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, preferences[prefIdx, 2], -1);
+  
+      lpmodel = addConstraintToLpModel(lpmodel, constraintRow, dir, 0);
     }
-    lpmodel = addConstraintToLpModel(lpmodel, constraintRow, dir, 0)
   }
   return(lpmodel);
 }
 
 setAlternativeOnConstraintRow = function(problem, lpmodel, constraintRow, altIdx, value) {
-  startIdx = getIndexForDataTypeByAltIdx(problem, lpmodel, 'CHARACT_POINTS', altIdx);
-
-  for (i in startIdx:(startIdx + problem$criteriaNumber - 1)) {
+  for (critIdx in 1:problem$criteriaNumber) {
+    i = getIndexForDataTypeByCritAndAltIdx(problem, lpmodel, 'CHARACT_POINTS', altIdx, critIdx);
     constraintRow[i] = value;
   }
   

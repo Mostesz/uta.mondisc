@@ -1,4 +1,4 @@
-addPredefinedMonConstraintsToLpModel = function(problem, lpmodel, isGainCase, critIdx, dir) {  
+addPredefinedMonConstraintsToLpModel = function(problem, lpmodel, isGainCase, critIdx) {  
   currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
   for (i in 2:problem$alternativesNumber) {
     altIdx = currCriterionAlternativesValues[i, 'index'];
@@ -7,6 +7,7 @@ addPredefinedMonConstraintsToLpModel = function(problem, lpmodel, isGainCase, cr
     constraintRow = initLpModelMatrixRow(lpmodel);
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, 1);
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, prevAltIdx, critIdx, -1);
+    print(constraintRow);
     
     dir = if(isGainCase) '>=' else '<=';
     lpmodel = addConstraintToLpModel(lpmodel, constraintRow, dir, 0);
