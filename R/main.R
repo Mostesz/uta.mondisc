@@ -50,7 +50,7 @@
 #'   indifferences = indifferences
 #' )
 #' @export
-buildProblem = function(alternatives, margValueFuncShapes, M, strictPreferences = NULL, weakPreferences = NULL, indifferences = NULL) {
+buildProblem = function(alternatives, margValueFuncShapes, M, eps, strictPreferences = NULL, weakPreferences = NULL, indifferences = NULL) {
   validateAlternatives(alternatives);
   
   criteriaNumber = ncol(alternatives);
@@ -58,6 +58,7 @@ buildProblem = function(alternatives, margValueFuncShapes, M, strictPreferences 
   
   validateMargValueFuncShapes(margValueFuncShapes, criteriaNumber);
   validateM(M);
+  validateEps(eps);
   dmPreferences = validateDMPreferences(strictPreferences, weakPreferences, indifferences, alternativesNumber);
   
   problem = list(alternatives = alternatives,
@@ -68,7 +69,8 @@ buildProblem = function(alternatives, margValueFuncShapes, M, strictPreferences 
                strictPreferences = dmPreferences$strictPreferences,
                weakPreferences = dmPreferences$weakPreferences,
                indifferences = dmPreferences$indifferences,
-               M = M);
+               M = M,
+               eps = eps);
   problem = initIncreasinglyOrderedValuesForAlternatives(problem);
 
   return(problem);
@@ -108,7 +110,7 @@ calcSolution = function(problem) {
   i = 0;
   solutionsMat = NULL;
   repeat{
-    lpresult = Rglpk_solve_LP(lpmodel$obj, lpmodel$mat, lpmodel$dir, lpmodel$rhs, types = lpmodel$types, max = lpmodel$max);
+    lpresult = solveLP(problem, lpmodel);
     lpmodel = forbidSolution(lpmodel, lpresult$solution);
     
     if (lpresult$status != 0) {
@@ -121,22 +123,39 @@ calcSolution = function(problem) {
     solutionsMat = addElementsToMatrix(solutionsMat, length(lpresult$solution), lpresult$solution);
     i = i+1;
   }
-  
-  additiveValueFunctions = calcAdditiveValueFunctions(problem, solutionsMat);
-  preferenceRelations = getPossibleAndNecessaryRelations(additiveValueFunctions);
-  
-  print("Solutions number:");
-  print(i);
-  print("Solutions matrix:");
-  print(solutionsMat);
-  
-  print("Additive value functions:");
-  print(additiveValueFunctions);
-  
-  print("Possible relations:");
-  print(preferenceRelations$possible);
-  print("Necessary relations:");
-  print(preferenceRelations$necessary);
+  if (!is.null(solutionsMat)) {
+    additiveValueFunctions = calcAdditiveValueFunctions(problem, solutionsMat);
+    preferenceRelations = getPossibleAndNecessaryRelations(additiveValueFunctions);
+    
+    print("Solutions number:");
+    print(i);
+    print("Solutions matrix:");
+    print(solutionsMat);
+    
+    print("Additive value functions:");
+    print(additiveValueFunctions);
+    
+    print("Possible relations:");
+    print(preferenceRelations$possible);
+    print("Necessary relations:");
+    print(preferenceRelations$necessary);
+  } else {
+    print("No solutions found");
+  }
+}
+
+solveLP = function(problem, lpmodel) {
+  for (constraintIdx in 1:length(dir)) {
+    if (lpmodel$dir[constraintIdx] == ">") {
+      lpmodel$dir[constraintIdx] = ">=";
+      lpmodel$rhs[constraintIdx] = lpmodel$rhs[constraintIdx] + problem$eps;
+    } else if (lpmodel$dir[constraintIdx] == "<") {
+      lpmodel$dir[constraintIdx] = "<=";
+      lpmodel$rhs[constraintIdx] = lpmodel$rhs[constraintIdx] - problem$eps;
+    }
+  }
+  lpresult = Rglpk_solve_LP(lpmodel$obj, lpmodel$mat, lpmodel$dir, lpmodel$rhs, types = lpmodel$types, max = lpmodel$max);
+  return(lpresult);
 }
 
 getPossibleAndNecessaryRelations = function(additiveValueFunctions) {
@@ -241,15 +260,15 @@ initMatDataTypesValues = function(problem) {
   return(list(
     CHARACT_POINTS = list(
       size = problem$alternativesNumber * problem$criteriaNumber,
-      type = 'I'
+      type = 'C'
     ),
     NOT_PREDEFINED_MON_CHARACT_POINTS_GAIN_CASE = list(
       size = problem$alternativesNumber * problem$criteriaNumber,
-      type = 'I'
+      type = 'C'
     ),
     NOT_PREDEFINED_MON_CHARACT_POINTS_COST_CASE = list(
       size = problem$alternativesNumber * problem$criteriaNumber,
-      type = 'I'
+      type = 'C'
     ),
     NOT_PREDEFINED_MON_COST_BINARY_VARIABLES = list(
       size = problem$criteriaNumber,
@@ -277,7 +296,7 @@ initMatDataTypesValues = function(problem) {
     ),
     BEST_EVALUATIONS_ON_CRITERIA = list(
       size = problem$criteriaNumber,
-      type = 'I'
+      type = 'C'
     ),
     V_TYPE_NORMALIZATION_ONE_BINARY_VARIABLES = list(
       size = problem$criteriaNumber,
@@ -350,6 +369,12 @@ validateMargValueFuncShapes = function(margValueFuncShapes, criteriaNumber) {
 validateM = function(M) {
   if (is.null(M) || !(M > 0)) {
     stop("Argument 'M' must be greater than 0");
+  }
+}
+
+validateEps = function(eps) {
+  if (is.null(eps) || !(eps > 0) || !(eps < 1)) {
+    stop("Argument 'eps' must be greater than 0 and less than 1");
   }
 }
 

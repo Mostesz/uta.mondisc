@@ -234,6 +234,7 @@ test_that("simple example", {
                           0, 51), ncol = 2, byrow=TRUE);
   margValueFuncShapes = c("GAIN", "COST");
   M = 1000000;
+  eps = 0.0001;
   
   strictPreferences = matrix(c(1,2), ncol=2, byrow=TRUE);
   
@@ -241,6 +242,7 @@ test_that("simple example", {
     alternatives,
     margValueFuncShapes,
     M,
+    eps,
     strictPreferences = strictPreferences
   )
 })
