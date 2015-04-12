@@ -85,6 +85,8 @@ addProblemConstraintsToLpModel = function(problem, lpmodel) {
   
   lpmodel = addTypesToLpModel(lpmodel);
   
+  print(lpmodel);
+  
   return(lpmodel);
 }
 

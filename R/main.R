@@ -145,7 +145,7 @@ calcSolution = function(problem) {
 }
 
 solveLP = function(problem, lpmodel) {
-  for (constraintIdx in 1:length(dir)) {
+  for (constraintIdx in 1:length(lpmodel$dir)) {
     if (lpmodel$dir[constraintIdx] == ">") {
       lpmodel$dir[constraintIdx] = ">=";
       lpmodel$rhs[constraintIdx] = lpmodel$rhs[constraintIdx] + problem$eps;
