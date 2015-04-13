@@ -209,7 +209,8 @@ test_that("lpmodel should be generated for full example problem", {
                           100, 1500,  12,  100,  340,  803,
                           120, 800,   13,  105,  360,  809), ncol = 6, byrow=TRUE);
   margValueFuncShapes = c("GAIN", "COST", "NOT_PREDEFINED", "A_TYPE", "V_TYPE", "NON_MON");
-  M = 1000000;
+  M = 1000;
+  eps = 0.0001;
   
   strictPreferences = matrix(c(1,2), ncol=2, byrow=TRUE);
   weakPreferences = matrix(c(2,3), ncol=2, byrow=TRUE);
@@ -219,6 +220,7 @@ test_that("lpmodel should be generated for full example problem", {
     alternatives,
     margValueFuncShapes,
     M,
+    eps,
     strictPreferences = strictPreferences,
     weakPreferences = weakPreferences,
     indifferences = indifferences
@@ -233,7 +235,7 @@ test_that("simple example", {
                           0, 50,
                           0, 51), ncol = 2, byrow=TRUE);
   margValueFuncShapes = c("GAIN", "COST");
-  M = 1000000;
+  M = 1000;
   eps = 0.0001;
   
   strictPreferences = matrix(c(1,2), ncol=2, byrow=TRUE);

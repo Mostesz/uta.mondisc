@@ -207,6 +207,8 @@ calcAdditiveValueFunctions = function(problem, solutionsMat) {
 }
 
 printSolution = function(lpmodel, solution) {
+  print("optimum:");
+  print(solution);
   for (dataType in lpmodel$matDataTypes) {
     startIdx = lpmodel$matDataTypesStartIndexes[[dataType]];
     endIdx = lpmodel$matDataTypesValues[[dataType]]$size + startIdx - 1;
