@@ -275,6 +275,110 @@ test_that("lpmodel should be generated for full example problem", {
   lpmodel = addProblemConstraintsToLpModel(problem, lpmodel);
 })
 
+test_that("should returns growing additive value function for gain case", {
+  alternatives = matrix(c(0, 50, 100), ncol = 1, byrow=TRUE);
+  margValueFuncShapes = c("GAIN");
+  M = 1000;
+  eps = 0.0001;
+  
+  strictPreferences = matrix(
+    c(3,2,
+      3,1,
+      2,1),
+    ncol=2, byrow=TRUE);
+  
+  problem = buildProblem (
+    alternatives,
+    margValueFuncShapes,
+    M,
+    eps,
+    strictPreferences = strictPreferences
+  )
+  
+  solution = calcSolution(problem);
+  expect_that(solution$solutionsNumber, equals(1)); 
+  expect_true(solution$additiveValueFunctions[1,1] < solution$additiveValueFunctions[1,2]); 
+  expect_true(solution$additiveValueFunctions[1,2] < solution$additiveValueFunctions[1,3]); 
+})
+
+test_that("should returns decreasing additive value function for cost case", {
+  alternatives = matrix(c(0, 50, 100), ncol = 1, byrow=TRUE);
+  margValueFuncShapes = c("COST");
+  M = 1000;
+  eps = 0.0001;
+  
+  strictPreferences = matrix(
+    c(1,2,
+      1,3,
+      2,3),
+    ncol=2, byrow=TRUE);
+  
+  problem = buildProblem (
+    alternatives,
+    margValueFuncShapes,
+    M,
+    eps,
+    strictPreferences = strictPreferences
+  )
+  
+  solution = calcSolution(problem);
+  expect_that(solution$solutionsNumber, equals(1)); 
+  expect_true(solution$additiveValueFunctions[1,1] > solution$additiveValueFunctions[1,2]); 
+  expect_true(solution$additiveValueFunctions[1,2] > solution$additiveValueFunctions[1,3]); 
+})
+
+test_that("should returns growing additive value function for not predefined monotonicity case", {
+  alternatives = matrix(c(0, 50, 100), ncol = 1, byrow=TRUE);
+  margValueFuncShapes = c("NOT_PREDEFINED");
+  M = 1000;
+  eps = 0.0001;
+  
+  strictPreferences = matrix(
+    c(3,2,
+      3,1,
+      2,1),
+    ncol=2, byrow=TRUE);
+  
+  problem = buildProblem (
+    alternatives,
+    margValueFuncShapes,
+    M,
+    eps,
+    strictPreferences = strictPreferences
+  )
+  
+  solution = calcSolution(problem);
+  expect_that(solution$solutionsNumber, equals(1)); 
+  expect_true(solution$additiveValueFunctions[1,1] < solution$additiveValueFunctions[1,2]); 
+  expect_true(solution$additiveValueFunctions[1,2] < solution$additiveValueFunctions[1,3]); 
+})
+
+test_that("should returns decreasing additive value function for not predefined monotonicity case", {
+  alternatives = matrix(c(0, 50, 100), ncol = 1, byrow=TRUE);
+  margValueFuncShapes = c("NOT_PREDEFINED");
+  M = 1000;
+  eps = 0.0001;
+  
+  strictPreferences = matrix(
+    c(1,2,
+      1,3,
+      2,3),
+    ncol=2, byrow=TRUE);
+  
+  problem = buildProblem (
+    alternatives,
+    margValueFuncShapes,
+    M,
+    eps,
+    strictPreferences = strictPreferences
+  )
+  
+  solution = calcSolution(problem);
+  expect_that(solution$solutionsNumber, equals(1)); 
+  expect_true(solution$additiveValueFunctions[1,1] > solution$additiveValueFunctions[1,2]); 
+  expect_true(solution$additiveValueFunctions[1,2] > solution$additiveValueFunctions[1,3]); 
+})
+
 test_that("simple example", {
   alternatives = matrix(c(100, 0,
                           0, 50,
