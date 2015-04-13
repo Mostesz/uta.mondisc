@@ -107,9 +107,13 @@ buildProblem = function(alternatives, margValueFuncShapes, M, eps, strictPrefere
 calcSolution = function(problem) {
   lpmodel = initLpModel(problem);  
   lpmodel = addProblemConstraintsToLpModel(problem, lpmodel);
-  i = 0;
+  
   solutionsMat = NULL;
+  lpmodelsList = list();
+  
   repeat{
+    lpmodelsList = append(lpmodelsList, lpmodel);
+    
     lpresult = solveLP(problem, lpmodel);
     lpmodel = forbidSolution(lpmodel, lpresult$solution);
     
@@ -117,31 +121,42 @@ calcSolution = function(problem) {
       break;
     }
     
-    printSolution(lpmodel, lpresult$solution);
-    readline()
+    printSolution(lpmodel, lpresult$solution); #TODO remove it
+    readline() #TODO remove it
     
     solutionsMat = addElementsToMatrix(solutionsMat, length(lpresult$solution), lpresult$solution);
-    i = i+1;
   }
   if (!is.null(solutionsMat)) {
     additiveValueFunctions = calcAdditiveValueFunctions(problem, solutionsMat);
     preferenceRelations = getPossibleAndNecessaryRelations(additiveValueFunctions);
     
-    print("Solutions number:");
-    print(i);
-    print("Solutions matrix:");
-    print(solutionsMat);
-    
-    print("Additive value functions:");
-    print(additiveValueFunctions);
-    
-    print("Possible relations:");
-    print(preferenceRelations$possible);
-    print("Necessary relations:");
-    print(preferenceRelations$necessary);
-  } else {
-    print("No solutions found");
+    return(buildSolution(lpmodelsList, solutionsMat, additiveValueFunctions, preferenceRelations));
   }
+  return(buildSolution(lpmodelsList));
+}
+
+buildSolution = function(lpmodels, solutionsMat = NULL, additiveValueFunctions = NULL, preferenceRelations = NULL) {
+  solution = list(
+    lpmodels = lpmodels,
+    solutionsMat = solutionsMat,
+    additiveValueFunctions = additiveValueFunctions
+  );
+  
+  if (!is.null(solutionsMat)) {
+    solution$solutionsNumber = nrow(solutionsMat);
+  } else {
+    solution$solutionsNumber = 0;
+  }
+  
+  if (!is.null(preferenceRelations)) {
+    solution$possibleRelations = preferenceRelations$possible;
+    solution$necessaryRelations = preferenceRelations$necessary;
+  } else {
+    solution$possibleRelations = NULL;
+    solution$necessaryRelations = NULL;
+  }
+  
+  return(solution);
 }
 
 solveLP = function(problem, lpmodel) {

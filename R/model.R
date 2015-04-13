@@ -82,10 +82,7 @@ addProblemConstraintsToLpModel = function(problem, lpmodel) {
            });
   }
   lpmodel = addConstraintToLpModel(lpmodel, normToOneConstraintRow, '==', 1);
-  
   lpmodel = addTypesToLpModel(lpmodel);
-  
-  print(lpmodel);
   
   return(lpmodel);
 }
