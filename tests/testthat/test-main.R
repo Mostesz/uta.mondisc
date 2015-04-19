@@ -296,9 +296,10 @@ test_that("should returns growing additive value function for gain case", {
   )
   
   solution = calcSolution(problem);
-  expect_that(solution$solutionsNumber, equals(1)); 
+  expect_that(solution$solutionsNumber, equals(1));
+  expect_that(solution$finalCriteriaTypes[1,], equals(c("GAIN")));
   expect_true(solution$additiveValueFunctions[1,1] < solution$additiveValueFunctions[1,2]); 
-  expect_true(solution$additiveValueFunctions[1,2] < solution$additiveValueFunctions[1,3]); 
+  expect_true(solution$additiveValueFunctions[1,2] < solution$additiveValueFunctions[1,3]);
 })
 
 test_that("should returns decreasing additive value function for cost case", {
@@ -322,7 +323,8 @@ test_that("should returns decreasing additive value function for cost case", {
   )
   
   solution = calcSolution(problem);
-  expect_that(solution$solutionsNumber, equals(1)); 
+  expect_that(solution$solutionsNumber, equals(1));
+  expect_that(solution$finalCriteriaTypes[1,], equals(c("COST")));
   expect_true(solution$additiveValueFunctions[1,1] > solution$additiveValueFunctions[1,2]); 
   expect_true(solution$additiveValueFunctions[1,2] > solution$additiveValueFunctions[1,3]); 
 })
@@ -348,7 +350,8 @@ test_that("should returns growing additive value function for not predefined mon
   )
   
   solution = calcSolution(problem);
-  expect_that(solution$solutionsNumber, equals(1)); 
+  expect_that(solution$solutionsNumber, equals(1));
+  expect_that(solution$finalCriteriaTypes[1,], equals(c("GAIN")));
   expect_true(solution$additiveValueFunctions[1,1] < solution$additiveValueFunctions[1,2]); 
   expect_true(solution$additiveValueFunctions[1,2] < solution$additiveValueFunctions[1,3]); 
 })
@@ -374,7 +377,8 @@ test_that("should returns decreasing additive value function for not predefined 
   )
   
   solution = calcSolution(problem);
-  expect_that(solution$solutionsNumber, equals(1)); 
+  expect_that(solution$solutionsNumber, equals(1));
+  expect_that(solution$finalCriteriaTypes[1,], equals(c("COST")));
   expect_true(solution$additiveValueFunctions[1,1] > solution$additiveValueFunctions[1,2]); 
   expect_true(solution$additiveValueFunctions[1,2] > solution$additiveValueFunctions[1,3]); 
 })
