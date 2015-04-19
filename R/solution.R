@@ -27,18 +27,43 @@ getFinalCriteriaTypes = function(problem, lpmodel, solutionsMat) {
   for (solutionIdx in 1:nrow(solutionsMat)) {
     for (criteriaIdx in 1:problem$criteriaNumber) {
       if (problem$margValueFuncShapes[criteriaIdx] %in% c('GAIN', 'COST')) {
-        result[solutionIdx, criteriaIdx] = problem$margValueFuncShapes[criteriaIdx];
+        result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForGainOrCostCase(problem, criteriaIdx);
       } else if (problem$margValueFuncShapes[criteriaIdx] == 'NOT_PREDEFINED') {
-        binaryValue = getNotPredefinedMonCostBinaryVarFromConstraintRow(problem, lpmodel, solutionsMat[solutionIdx,], criteriaIdx);
-        if (binaryValue == 1) {
-          result[solutionIdx, criteriaIdx] = 'COST';
-        } else if (binaryValue == 0) {
-          result[solutionIdx, criteriaIdx] = 'GAIN';
-        }
+        result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForNotPredefinedCase(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx);
+      } else if (problem$margValueFuncShapes[criteriaIdx] == 'A_TYPE') {
+        result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForAAndVTypeCase(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx, TRUE);
+      } else if (problem$margValueFuncShapes[criteriaIdx] == 'V_TYPE') {
+        result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForAAndVTypeCase(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx, FALSE);
       }
     }
   }
   return(result);
+}
+
+getFinalCriteriaTypeForGainAndCostCase = function(problem, criteriaIdx) {
+  return(problem$margValueFuncShapes[criteriaIdx]);
+}
+
+getFinalCriteriaTypeForNotPredefinedCase = function(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx) {
+  binaryValue = getNotPredefinedMonCostBinaryVarFromConstraintRow(problem, lpmodel, solutionsMat[solutionIdx,], criteriaIdx);
+  if (binaryValue == 1) {
+    return('COST');
+  } else if (binaryValue == 0) {
+    return('GAIN');
+  }
+}
+
+getFinalCriteriaTypeForAAndVTypeCase = function(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx, isAType) {
+  for (altIdx in 2:problem$alternativesNumber) {
+    if (getAAndVTypeMonBinaryVarFromConstraintRow(problem, lpmodel, solutionsMat[solutionIdx,], altIdx, criteriaIdx) == 1) {
+      if (altIdx == 2) {
+        return(ifelse(isAType, 'COST', 'GAIN'));
+      } else {
+        return(ifelse(isAType, 'A_TYPE', 'V_TYPE'));
+      }
+    }
+  }
+  return(ifelse(isAType, 'GAIN', 'COST'));
 }
 
 solveLP = function(problem, lpmodel) {
