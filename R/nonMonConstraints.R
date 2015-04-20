@@ -88,7 +88,7 @@ addNonMonNormalizationToLpModel = function(problem, lpmodel, critIdx) {
     
     constraintRow = initLpModelMatrixRow(lpmodel);
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, 1);
-    constraintRow = setNonMonNormalizationZeroBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, 1);
+    constraintRow = setNonMonNormalizationZeroBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, problem$M);
     lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', problem$M);
     
     binVariableConstraintRow = setNonMonNormalizationZeroBinaryVarOnConstraintRow(problem, lpmodel, binVariableConstraintRow, altIdx, critIdx, 1);
