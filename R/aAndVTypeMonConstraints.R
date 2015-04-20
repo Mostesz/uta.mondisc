@@ -40,6 +40,10 @@ addAAndVTypeMonConstraintsToLpModel = function(problem, lpmodel, isAType, critId
   }
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', 1);
   
+  constraintRow = initLpModelMatrixRow(lpmodel);
+  constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, 1, critIdx, 1);
+  lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '==', 0);
+  
   return(lpmodel);
 }
 

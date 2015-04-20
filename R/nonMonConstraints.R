@@ -41,6 +41,12 @@ addNonMonConstraintsToLpModel = function(problem, lpmodel, critIdx) {
     }
   }
   
+  constraintRow = initLpModelMatrixRow(lpmodel);
+  constraintRow = setMonDirectionBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, 1, critIdx, 1);
+  constraintRow = setChangeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, 1, critIdx, 1);
+  constraintRow = setChangeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, 2, critIdx, 1);
+  lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '==', 0);
+  
   return(lpmodel);
 }
 

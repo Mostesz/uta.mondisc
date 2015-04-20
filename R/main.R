@@ -108,6 +108,8 @@ calcSolution = function(problem) {
   lpmodel = initLpModel(problem);  
   lpmodel = addProblemConstraintsToLpModel(problem, lpmodel);
   
+  printSolution(lpmodel, lpmodel$mat[4,])
+  
   solutionsMat = NULL;
   lpmodelsList = list();
   
