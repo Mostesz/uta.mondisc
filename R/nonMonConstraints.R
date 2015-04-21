@@ -42,9 +42,9 @@ addNonMonConstraintsToLpModel = function(problem, lpmodel, critIdx) {
   }
   
   constraintRow = initLpModelMatrixRow(lpmodel);
-  constraintRow = setMonDirectionBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, 1, critIdx, 1);
-  constraintRow = setChangeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, 1, critIdx, 1);
-  constraintRow = setChangeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, 2, critIdx, 1);
+  constraintRow = setMonDirectionBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, currCriterionAlternativesValues[1, 'index'], critIdx, 1);
+  constraintRow = setChangeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, currCriterionAlternativesValues[1, 'index'], critIdx, 1);
+  constraintRow = setChangeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, currCriterionAlternativesValues[2, 'index'], critIdx, 1);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '==', 0);
   
   return(lpmodel);
@@ -83,7 +83,7 @@ addNonMonNormalizationToLpModel = function(problem, lpmodel, critIdx) {
   
   # Normalization to zero
   binVariableConstraintRow = initLpModelMatrixRow(lpmodel);
-  for (i in 2:problem$alternativesNumber) {
+  for (i in 1:problem$alternativesNumber) {
     altIdx = currCriterionAlternativesValues[i, 'index'];
     
     constraintRow = initLpModelMatrixRow(lpmodel);
