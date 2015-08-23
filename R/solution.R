@@ -27,7 +27,7 @@ getFinalCriteriaTypes = function(problem, lpmodel, solutionsMat) {
   for (solutionIdx in 1:nrow(solutionsMat)) {
     for (criteriaIdx in 1:problem$criteriaNumber) {
       if (problem$margValueFuncShapes[criteriaIdx] %in% c('GAIN', 'COST')) {
-        result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForGainOrCostCase(problem, criteriaIdx);
+        result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForGainAndCostCase(problem, criteriaIdx);
       } else if (problem$margValueFuncShapes[criteriaIdx] == 'NOT_PREDEFINED') {
         result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForNotPredefinedCase(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx);
       } else if (problem$margValueFuncShapes[criteriaIdx] == 'A_TYPE') {

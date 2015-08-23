@@ -108,8 +108,6 @@ calcSolution = function(problem) {
   lpmodel = initLpModel(problem);  
   lpmodel = addProblemConstraintsToLpModel(problem, lpmodel);
   
-  printSolution(lpmodel, lpmodel$mat[4,])
-  
   solutionsMat = NULL;
   lpmodelsList = list();
   
@@ -122,7 +120,7 @@ calcSolution = function(problem) {
     if (lpresult$status != 0) {
       break;
     }
-    
+    print('solution:')
     printSolution(lpmodel, lpresult$solution); #TODO remove it
     readline() #TODO remove it
     

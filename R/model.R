@@ -29,7 +29,6 @@ forbidSolution = function(lpmodel, solution) {
       constraint[i] = solution[i];
     }
   }
-    
   lpmodel = addConstraintToLpModel(lpmodel, constraint, '<=', sum(constraint) - 1);
   
   return(lpmodel);
