@@ -65,7 +65,6 @@ buildProblem = function(alternatives, margValueFuncShapes, M, eps, strictPrefere
                criteriaNumber = criteriaNumber,
                alternativesNumber = alternativesNumber,
                margValueFuncShapes = margValueFuncShapes,
-               alternativesValuesForCriteria = NULL,
                strictPreferences = dmPreferences$strictPreferences,
                weakPreferences = dmPreferences$weakPreferences,
                indifferences = dmPreferences$indifferences,
@@ -108,6 +107,8 @@ calcSolution = function(problem) {
   lpmodel = initLpModel(problem);  
   lpmodel = addProblemConstraintsToLpModel(problem, lpmodel);
   
+  print(lpmodel)
+  
   solutionsMat = NULL;
   lpmodelsList = list();
   
@@ -127,7 +128,7 @@ calcSolution = function(problem) {
     solutionsMat = addElementsToMatrix(solutionsMat, length(lpresult$solution), lpresult$solution);
   }
   if (!is.null(solutionsMat)) {
-    additiveValueFunctions = calcAdditiveValueFunctions(problem, solutionsMat);
+    additiveValueFunctions = calcAdditiveValueFunctions(problem, lpmodel, solutionsMat);
     preferenceRelations = getPossibleAndNecessaryRelations(additiveValueFunctions);
     finalCriteriaTypes = getFinalCriteriaTypes(problem, lpmodel, solutionsMat);
     
@@ -171,22 +172,23 @@ initMatDataTypes = function() {
     "NON_MON_NORMALIZATION_ZERO_BINARY_VARIABLES",
     "BEST_EVALUATIONS_ON_CRITERIA",
     "V_TYPE_NORMALIZATION_ONE_BINARY_VARIABLES",
-    "NON_MON_NORMALIZATION_ONE_BINARY_VARIABLES"
+    "NON_MON_NORMALIZATION_ONE_BINARY_VARIABLES",
+    "EPS"
   ));
 }
 
 initMatDataTypesValues = function(problem) {
   return(list(
     CHARACT_POINTS = list(
-      size = problem$alternativesNumber * problem$criteriaNumber,
+      size = sum(problem$levelNoForCriteria),
       type = 'C'
     ),
     NOT_PREDEFINED_MON_CHARACT_POINTS_GAIN_CASE = list(
-      size = problem$alternativesNumber * problem$criteriaNumber,
+      size = sum(problem$levelNoForCriteria),
       type = 'C'
     ),
     NOT_PREDEFINED_MON_CHARACT_POINTS_COST_CASE = list(
-      size = problem$alternativesNumber * problem$criteriaNumber,
+      size = sum(problem$levelNoForCriteria),
       type = 'C'
     ),
     NOT_PREDEFINED_MON_COST_BINARY_VARIABLES = list(
@@ -194,15 +196,15 @@ initMatDataTypesValues = function(problem) {
       type = 'B'
     ),
     A_AND_V_TYPE_BINARY_VARIABLES = list(
-      size = problem$alternativesNumber  * problem$criteriaNumber,
+      size = sum(problem$levelNoForCriteria),
       type = 'B'
     ),
     MON_DIRECTION_BINARY_VARIABLES = list(
-      size = problem$alternativesNumber  * problem$criteriaNumber,
+      size = sum(problem$levelNoForCriteria),
       type = 'B'
     ),
     CHANGE_MON_BINARY_VARIABLES = list(
-      size = problem$alternativesNumber  * problem$criteriaNumber,
+      size = sum(problem$levelNoForCriteria),
       type = 'B'
     ),
     A_TYPE_NORMALIZATION_ZERO_BINARY_VARIABLES = list(
@@ -210,7 +212,7 @@ initMatDataTypesValues = function(problem) {
       type = 'B'
     ),
     NON_MON_NORMALIZATION_ZERO_BINARY_VARIABLES = list(
-      size = problem$alternativesNumber * problem$criteriaNumber,
+      size = sum(problem$levelNoForCriteria),
       type = 'B'
     ),
     BEST_EVALUATIONS_ON_CRITERIA = list(
@@ -222,28 +224,14 @@ initMatDataTypesValues = function(problem) {
       type = 'B'
     ),
     NON_MON_NORMALIZATION_ONE_BINARY_VARIABLES = list(
-      size = problem$alternativesNumber * problem$criteriaNumber,
+      size = sum(problem$levelNoForCriteria),
       type = 'B'
+    ),
+    EPS = list(
+      size = 1,
+      type = 'C'
     )
   ));
-}
-
-initIncreasinglyOrderedValuesForAlternatives = function(problem) {
-  problem$alternativesValuesForCriteria = list();
-  criteriaNumber = problem$criteriaNumber;
-  alternativesNumber = problem$alternativesNumber;
-  
-  for (j in 1:criteriaNumber) {
-    currCriterionAltValues = data.frame(value = numeric(alternativesNumber), index = numeric(alternativesNumber), stringsAsFactors = FALSE);
-    for (i in 1:alternativesNumber) {
-      currCriterionAltValues$value[i] = problem$alternatives[i, j];
-      currCriterionAltValues$index[i] = i;
-    }
-    currCriterionAltValues = currCriterionAltValues[with(currCriterionAltValues, order(value)), ]
-    problem$alternativesValuesForCriteria = append(problem$alternativesValuesForCriteria, list(currCriterionAltValues));
-  }
-  
-  return(problem);
 }
 
 initMatDataTypesStartIndexes = function(matDataTypes, matDataTypesValues) {
@@ -259,6 +247,42 @@ initMatDataTypesStartIndexes = function(matDataTypes, matDataTypesValues) {
     index = index + matDataTypesValues[[currType]]$size;
   }
   return(indexes);
+}
+
+initIncreasinglyOrderedValuesForAlternatives = function(problem) {
+  levelsForCriteria = getLevels(problem)
+  problem$levelNoForCriteria = vector(mode="numeric", length=problem$criteriaNumber)
+  problem$alternativesIndexesForCriteria = list()
+  for (critIdx in 1:problem$criteriaNumber) {
+    levels = levelsForCriteria[[critIdx]]
+    problem$levelNoForCriteria[critIdx] = length(levels)
+      
+    alternativesIndexes = vector(mode="numeric", length=problem$alternativesNumber)
+    for (altIdx in 1:problem$alternativesNumber) {
+      altValue = problem$alternatives[altIdx, critIdx]
+      valueAssigned = FALSE
+      for (lvlIdx in 1:length(levels)) {
+        if (levels[lvlIdx] == altValue) {
+          alternativesIndexes[altIdx] = lvlIdx
+          valueAssigned = TRUE
+          break
+        }
+      }
+      if (!valueAssigned) {
+        stop('Value has been not found')
+      }
+    }
+    problem$alternativesIndexesForCriteria[[critIdx]] = alternativesIndexes
+  }
+  return(problem)
+}
+
+getLevels <- function(problem) {
+  res <- list()
+  for (i in 1:problem$criteriaNumber) {
+    res[[i]] <- sort(unique(problem$alternatives[,i]))
+  }
+  return(res)
 }
 
 ### VALIDATION

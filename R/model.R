@@ -43,9 +43,9 @@ addConstraintToLpModel = function(lpmodel, constraintRow, dir, rhs) {
 }
 
 addProblemConstraintsToLpModel = function(problem, lpmodel) {
-  lpmodel = addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$strictPreferences, '>');
-  lpmodel = addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$weakPreferences, '>=');
-  lpmodel = addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$indifferences, '==');
+  lpmodel = addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$strictPreferences, 'STRICT');
+  lpmodel = addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$weakPreferences, 'WEAK');
+  lpmodel = addHolisticJudgmentsConstraintsToLpModel(problem, lpmodel, problem$indifferences, 'INDIFF');
   
   normToOneConstraintRow = initLpModelMatrixRow(lpmodel);
   for (critIdx in 1:problem$criteriaNumber) {
@@ -81,45 +81,36 @@ addProblemConstraintsToLpModel = function(problem, lpmodel) {
            });
   }
   lpmodel = addConstraintToLpModel(lpmodel, normToOneConstraintRow, '==', 1);
+  
+  epsConstraintRow = initLpModelMatrixRow(lpmodel)
+  epsConstraintRow = setEpsValueOnConstraintRow(problem, lpmodel, epsConstraintRow, 1)
+  lpmodel = addConstraintToLpModel(lpmodel, epsConstraintRow, '==', problem$eps);
+  
   lpmodel = addTypesToLpModel(lpmodel);
   
   return(lpmodel);
 }
 
-getIndexForDataTypeByCritAndAltIdx = function(problem, lpmodel, dataType, altIdx, critIdx,
-                                            startAltIdx = 1, endAltIdx = problem$alternativesNumber,
-                                            startCritIdx = 1, endCritIdx = problem$criteriaNumber) {
-  stopifnot(critIdx >= startCritIdx);
-  stopifnot(critIdx <= endCritIdx);
-  stopifnot(altIdx  >= startAltIdx);
-  stopifnot(altIdx  <= endAltIdx);
+getIndexForDataTypeByCritAndChPointIdx = function(problem, lpmodel, dataType, chPointIdx, critIdx) {
+  stopifnot(critIdx >= 1);
+  stopifnot(critIdx <= problem$criteriaNumber);
+  stopifnot(chPointIdx >= 1);
+  stopifnot(chPointIdx <= problem$levelNoForCriteria[critIdx]);
   
   startIdx = getLpModelMatrixRowStartIdx(lpmodel, dataType);
-  i = problem$criteriaNumber * (altIdx - startAltIdx) + critIdx;
-  
-  return(startIdx + i - 1);
+  critOffset = 0
+  if (critIdx > 1) {
+    critOffset = sum(problem$levelNoForCriteria[1:(critIdx-1)])
+  }
+  return(startIdx + critOffset + chPointIdx - 1)
 }
 
-getIndexForDataTypeByCritIdx = function(problem, lpmodel, dataType, critIdx,
-                                              startCritIdx = 1, endCritIdx = problem$criteriaNumber) {
-  stopifnot(critIdx >= startCritIdx);
-  stopifnot(critIdx <= endCritIdx);
+getIndexForDataTypeByCritIdx = function(problem, lpmodel, dataType, critIdx) {
+  stopifnot(critIdx >= 1)
+  stopifnot(critIdx <= problem$criteriaNumber)
   
   startIdx = getLpModelMatrixRowStartIdx(lpmodel, dataType);
-  i = critIdx;
-  
-  return(startIdx + i - 1);
-}
-
-getIndexForDataTypeByAltIdx = function(problem, lpmodel, dataType, altIdx,
-                                              startAltIdx = 1, endAltIdx = problem$alternativesNumber) {
-  stopifnot(altIdx  >= startAltIdx);
-  stopifnot(altIdx  <= endAltIdx);
-  
-  startIdx = getLpModelMatrixRowStartIdx(lpmodel, dataType);
-  i = altIdx;
-  
-  return(startIdx + i - 1);
+  return(startIdx + critIdx - 1);
 }
 
 getLpModelMatrixSizeForDataType = function(lpmodel, dataType = 'END') {

@@ -25,27 +25,25 @@ buildSolution = function(finalCriteriaTypes = NULL, solutionsMat = NULL, additiv
 getFinalCriteriaTypes = function(problem, lpmodel, solutionsMat) {
   result = matrix(data=NA, nrow=nrow(solutionsMat), ncol=problem$criteriaNumber);
   for (solutionIdx in 1:nrow(solutionsMat)) {
-    for (criteriaIdx in 1:problem$criteriaNumber) {
-      if (problem$margValueFuncShapes[criteriaIdx] %in% c('GAIN', 'COST')) {
-        result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForGainAndCostCase(problem, criteriaIdx);
-      } else if (problem$margValueFuncShapes[criteriaIdx] == 'NOT_PREDEFINED') {
-        result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForNotPredefinedCase(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx);
-      } else if (problem$margValueFuncShapes[criteriaIdx] == 'A_TYPE') {
-        result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForAAndVTypeCase(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx, TRUE);
-      } else if (problem$margValueFuncShapes[criteriaIdx] == 'V_TYPE') {
-        result[solutionIdx, criteriaIdx] = getFinalCriteriaTypeForAAndVTypeCase(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx, FALSE);
+    for (critIdx in 1:problem$criteriaNumber) {
+      if (problem$margValueFuncShapes[critIdx] %in% c('GAIN', 'COST')) {
+        result[solutionIdx, critIdx] = problem$margValueFuncShapes[critIdx]
+      } else if (problem$margValueFuncShapes[critIdx] == 'NOT_PREDEFINED') {
+        result[solutionIdx, critIdx] = getFinalCriteriaTypeForNotPredefinedCase(problem, lpmodel, solutionsMat, solutionIdx, critIdx);
+      } else if (problem$margValueFuncShapes[critIdx] == 'A_TYPE') {
+        result[solutionIdx, critIdx] = getFinalCriteriaTypeForAAndVTypeCase(problem, lpmodel, solutionsMat, solutionIdx, critIdx, TRUE);
+      } else if (problem$margValueFuncShapes[critIdx] == 'V_TYPE') {
+        result[solutionIdx, critIdx] = getFinalCriteriaTypeForAAndVTypeCase(problem, lpmodel, solutionsMat, solutionIdx, critIdx, FALSE);
+      } else if (problem$margValueFuncShapes[critIdx] == 'NON_MON') {
+        result[solutionIdx, critIdx] = 'NON_MON'
       }
     }
   }
   return(result);
 }
 
-getFinalCriteriaTypeForGainAndCostCase = function(problem, criteriaIdx) {
-  return(problem$margValueFuncShapes[criteriaIdx]);
-}
-
-getFinalCriteriaTypeForNotPredefinedCase = function(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx) {
-  binaryValue = getNotPredefinedMonCostBinaryVarFromConstraintRow(problem, lpmodel, solutionsMat[solutionIdx,], criteriaIdx);
+getFinalCriteriaTypeForNotPredefinedCase = function(problem, lpmodel, solutionsMat, solutionIdx, critIdx) {
+  binaryValue = getNotPredefinedMonCostBinaryVarFromConstraintRow(problem, lpmodel, solutionsMat[solutionIdx,], critIdx);
   if (binaryValue == 1) {
     return('COST');
   } else if (binaryValue == 0) {
@@ -53,9 +51,9 @@ getFinalCriteriaTypeForNotPredefinedCase = function(problem, lpmodel, solutionsM
   }
 }
 
-getFinalCriteriaTypeForAAndVTypeCase = function(problem, lpmodel, solutionsMat, solutionIdx, criteriaIdx, isAType) {
+getFinalCriteriaTypeForAAndVTypeCase = function(problem, lpmodel, solutionsMat, solutionIdx, critIdx, isAType) {
   for (altIdx in 2:problem$alternativesNumber) {
-    if (getAAndVTypeMonBinaryVarFromConstraintRow(problem, lpmodel, solutionsMat[solutionIdx,], altIdx, criteriaIdx) == 1) {
+    if (getAAndVTypeMonBinaryVarFromConstraintRow(problem, lpmodel, solutionsMat[solutionIdx,], altIdx, critIdx) == 1) {
       if (altIdx == 2) {
         return(ifelse(isAType, 'COST', 'GAIN'));
       } else {
@@ -67,15 +65,15 @@ getFinalCriteriaTypeForAAndVTypeCase = function(problem, lpmodel, solutionsMat, 
 }
 
 solveLP = function(problem, lpmodel) {
-  for (constraintIdx in 1:length(lpmodel$dir)) {
-    if (lpmodel$dir[constraintIdx] == ">") {
-      lpmodel$dir[constraintIdx] = ">=";
-      lpmodel$rhs[constraintIdx] = lpmodel$rhs[constraintIdx] + problem$eps;
-    } else if (lpmodel$dir[constraintIdx] == "<") {
-      lpmodel$dir[constraintIdx] = "<=";
-      lpmodel$rhs[constraintIdx] = lpmodel$rhs[constraintIdx] - problem$eps;
-    }
-  }
+  #for (constraintIdx in 1:length(lpmodel$dir)) {
+  #  if (lpmodel$dir[constraintIdx] == ">") {
+  #    lpmodel$dir[constraintIdx] = ">=";
+  #    lpmodel$rhs[constraintIdx] = lpmodel$rhs[constraintIdx] + problem$eps;
+  #  } else if (lpmodel$dir[constraintIdx] == "<") {
+  #    lpmodel$dir[constraintIdx] = "<=";
+  #    lpmodel$rhs[constraintIdx] = lpmodel$rhs[constraintIdx] - problem$eps;
+  #  }
+  #}
   lpresult = Rglpk_solve_LP(lpmodel$obj, lpmodel$mat, lpmodel$dir, lpmodel$rhs, types = lpmodel$types, max = lpmodel$max);
   return(lpresult);
 }
@@ -114,13 +112,14 @@ getPossibleAndNecessaryRelations = function(additiveValueFunctions) {
   return(list("possible" = possibleRelations, "necessary" = necessaryRelations));
 }
 
-calcAdditiveValueFunctions = function(problem, solutionsMat) {
+calcAdditiveValueFunctions = function(problem, lpmodel, solutionsMat) {
   additiveValueFunctions = matrix(nrow = nrow(solutionsMat), ncol = problem$alternativesNumber);
   for (solutionIdx in 1:nrow(solutionsMat)) {
     for (altIdx in 1:problem$alternativesNumber) {
       alternativeValue = 0;
       for (critIdx in 1:problem$criteriaNumber) {
-        alternativeValue = alternativeValue + solutionsMat[solutionIdx, problem$criteriaNumber * (altIdx-1) + critIdx];
+        altValueForCrit = getAlternativeValueFromConstraintRow(problem, lpmodel, solutionsMat[solutionIdx,], altIdx, critIdx)
+        alternativeValue = alternativeValue + altValueForCrit
       }
       additiveValueFunctions[solutionIdx, altIdx] = alternativeValue;
     }

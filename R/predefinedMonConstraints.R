@@ -1,12 +1,9 @@
-addPredefinedMonConstraintsToLpModel = function(problem, lpmodel, isGainCase, critIdx) {  
-  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
-  for (i in 2:problem$alternativesNumber) {
-    altIdx = currCriterionAlternativesValues[i, 'index'];
-    prevAltIdx = currCriterionAlternativesValues[i - 1, 'index'];
-    
+addPredefinedMonConstraintsToLpModel = function(problem, lpmodel, isGainCase, critIdx) {
+  levelsNumber = problem$levelNoForCriteria[critIdx]
+  for (chPointIdx in 2:levelsNumber) {
     constraintRow = initLpModelMatrixRow(lpmodel);
-    constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, 1);
-    constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, prevAltIdx, critIdx, -1);
+    constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, chPointIdx, critIdx, 1);
+    constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, chPointIdx - 1, critIdx, -1);
     
     dir = if(isGainCase) '>=' else '<=';
     lpmodel = addConstraintToLpModel(lpmodel, constraintRow, dir, 0);
@@ -16,23 +13,22 @@ addPredefinedMonConstraintsToLpModel = function(problem, lpmodel, isGainCase, cr
 }
 
 addPredefinedMonNormalizationToLpModel = function(problem, lpmodel, isGainCase, critIdx) {
-  stopifnot(critIdx>0);
-  stopifnot(critIdx<=problem$criteriaNumber);
+  stopifnot(critIdx > 0);
+  stopifnot(critIdx <= problem$criteriaNumber);
   
-  i = if (isGainCase) 1 else problem$alternativesNumber;
-  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
-  altIdx = currCriterionAlternativesValues[i, 'index'];
-  bestAltIdx = if (isGainCase) currCriterionAlternativesValues[problem$alternativesNumber, 'index']
-               else currCriterionAlternativesValues[1, 'index'];
+  levelsNumber = problem$levelNoForCriteria[critIdx]
+  
+  theWorstChPointIdx = if (isGainCase) 1 else levelsNumber
+  theBestChPointIdx = if (isGainCase) levelsNumber else 1
   
   # Normalization to zero  
   constraintRow = initLpModelMatrixRow(lpmodel);
-  constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, 1);
+  constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, theWorstChPointIdx, critIdx, 1);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '==', 0);
   
   # Normalization to one
   constraintRow = initLpModelMatrixRow(lpmodel);
-  constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, bestAltIdx, critIdx, 1);
+  constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, theBestChPointIdx, critIdx, 1);
   constraintRow = setBestEvaluationOnCriteriaOnContraintRow(problem, lpmodel, constraintRow, critIdx, -1);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '==', 0);
   

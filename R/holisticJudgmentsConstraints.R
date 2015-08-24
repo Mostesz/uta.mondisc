@@ -1,10 +1,16 @@
-addHolisticJudgmentsConstraintsToLpModel = function(problem, lpmodel, preferences, dir) {
+addHolisticJudgmentsConstraintsToLpModel = function(problem, lpmodel, preferences, prefType) {
   if (!is.null(preferences) && nrow(preferences) > 0) {
     for (prefIdx in 1:nrow(preferences)) {
       constraintRow = initLpModelMatrixRow(lpmodel);
       
-      constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, preferences[prefIdx, 1], 1);
-      constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, preferences[prefIdx, 2], -1);
+      constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, preferences[prefIdx, 1], 1)
+      constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, preferences[prefIdx, 2], -1)
+      dir = ">="
+      if (prefType == 'STRICT') {
+        constraintRow = setEpsValueOnConstraintRow(problem, lpmodel, constraintRow, -1)
+      } else if (prefType == 'INDIFF') {
+        dir = "=="
+      }
   
       lpmodel = addConstraintToLpModel(lpmodel, constraintRow, dir, 0);
     }
@@ -14,15 +20,14 @@ addHolisticJudgmentsConstraintsToLpModel = function(problem, lpmodel, preference
 
 setAlternativeOnConstraintRow = function(problem, lpmodel, constraintRow, altIdx, value) {
   for (critIdx in 1:problem$criteriaNumber) {
-    i = getIndexForDataTypeByCritAndAltIdx(problem, lpmodel, 'CHARACT_POINTS', altIdx, critIdx);
-    constraintRow[i] = value;
+    chPointIdx = problem$alternativesIndexesForCriteria[[critIdx]][altIdx]
+    constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, chPointIdx, critIdx, value)
   }
   
   return(constraintRow);
 }
 
-getAlternativeFromConstraintRow = function(problem, lpmodel, constraintRow, altIdx) {
-  i = getIndexForDataTypeByAltIdx(problem, lpmodel, 'CHARACT_POINTS', altIdx);
-  
-  return(constraintRow[i:(i+problem$criteriaNumber - 1)]);
+getAlternativeValueFromConstraintRow = function(problem, lpmodel, constraintRow, altIdx, critIdx) {
+  chPointIdx = problem$alternativesIndexesForCriteria[[critIdx]][altIdx]
+  return(getCharacPointFromConstraintRow(problem, lpmodel, constraintRow, chPointIdx, critIdx))
 }

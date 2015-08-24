@@ -1,36 +1,32 @@
 addNotPredefinedMonConstraintsToLpModel = function(problem, lpmodel, critIdx) {
-  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
-  for (i in 1:problem$alternativesNumber) {
-    altIdx = currCriterionAlternativesValues[i, 'index'];
-    
+  levelsNumber = problem$levelNoForCriteria[critIdx]
+  for (chPointIdx in 1:levelsNumber) {
     constraintRow = initLpModelMatrixRow(lpmodel);
-    constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, altIdx, critIdx, 1);
-    constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, altIdx, critIdx, -1);
-    constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, altIdx, critIdx, -1);
+    constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, chPointIdx, critIdx, 1);
+    constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, chPointIdx, critIdx, -1);
+    constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, chPointIdx, critIdx, -1);
     lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '==', 0);
     
     if (i != 1) {
-      prevAltIdx = currCriterionAlternativesValues[i - 1, 'index'];
-      
       constraintRow = initLpModelMatrixRow(lpmodel);
-      constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, altIdx, critIdx, 1);
-      constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, prevAltIdx, critIdx, -1);
+      constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, chPointIdx, critIdx, 1);
+      constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, chPointIdx - 1, critIdx, -1);
       lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '>=', 0);
       
       constraintRow = initLpModelMatrixRow(lpmodel);
-      constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, altIdx, critIdx, 1);
-      constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, prevAltIdx, critIdx, -1);
+      constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, chPointIdx, critIdx, 1);
+      constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, chPointIdx - 1, critIdx, -1);
       lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', 0);
     }
   }
   
   constraintRow = initLpModelMatrixRow(lpmodel);
-  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, currCriterionAlternativesValues$index[problem$alternativesNumber], critIdx, 1);
+  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, levelsNumber, critIdx, 1);
   constraintRow = setNotPredefinedMonCostBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, critIdx, problem$M);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', problem$M);
   
   constraintRow = initLpModelMatrixRow(lpmodel);
-  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, currCriterionAlternativesValues$index[1], critIdx, 1);
+  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, 1, critIdx, 1);
   constraintRow = setNotPredefinedMonCostBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, critIdx, -problem$M);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', 0);
   
@@ -41,66 +37,63 @@ addNotPredefinedMonNormalizationToLpModel = function(problem, lpmodel, critIdx) 
   stopifnot(critIdx>0);
   stopifnot(critIdx<=problem$criteriaNumber);
   
-  currCriterionAlternativesValues = problem$alternativesValuesForCriteria[[critIdx]];
-  
-  lastAltIdx = currCriterionAlternativesValues[problem$alternativesNumber, 'index'];
-  firstAltIdx = currCriterionAlternativesValues[1, 'index'];
+  levelsNumber = problem$levelNoForCriteria[critIdx]
   
   # Normalization to zero  
   constraintRow = initLpModelMatrixRow(lpmodel);
-  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, lastAltIdx, critIdx, 1);
+  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, levelsNumber, critIdx, 1);
   constraintRow = setNotPredefinedMonCostBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, critIdx, problem$M);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', problem$M);
   
   constraintRow = initLpModelMatrixRow(lpmodel);
-  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, firstAltIdx, critIdx, 1);
+  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, 1, critIdx, 1);
   constraintRow = setNotPredefinedMonCostBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, critIdx, -problem$M);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', 0);
   
   # Normalization to one
   constraintRow = initLpModelMatrixRow(lpmodel);
   constraintRow = setBestEvaluationOnCriteriaOnContraintRow(problem, lpmodel, constraintRow, critIdx, 1);
-  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, firstAltIdx, critIdx, -1);
+  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, 1, critIdx, -1);
   constraintRow = setNotPredefinedMonCostBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, critIdx, -problem$M);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '>=', -problem$M);
   
   constraintRow = initLpModelMatrixRow(lpmodel);
   constraintRow = setBestEvaluationOnCriteriaOnContraintRow(problem, lpmodel, constraintRow, critIdx, 1);
-  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, firstAltIdx, critIdx, -1);
+  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, 1, critIdx, -1);
   constraintRow = setNotPredefinedMonCostBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, critIdx, problem$M);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', problem$M);
   
   constraintRow = initLpModelMatrixRow(lpmodel);
   constraintRow = setBestEvaluationOnCriteriaOnContraintRow(problem, lpmodel, constraintRow, critIdx, 1);
-  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, lastAltIdx, critIdx, -1);
+  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, levelsNumber, critIdx, -1);
   constraintRow = setNotPredefinedMonCostBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, critIdx, problem$M);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '>=', 0);
   
   constraintRow = initLpModelMatrixRow(lpmodel);
   constraintRow = setBestEvaluationOnCriteriaOnContraintRow(problem, lpmodel, constraintRow, critIdx, 1);
-  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, lastAltIdx, critIdx, -1);
+  constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, levelsNumber, critIdx, -1);
   constraintRow = setNotPredefinedMonCostBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, critIdx, -problem$M);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', 0);
   
   return(lpmodel);
 }
 
-setNotPredefinedMonCharacPointOnConstraintRow = function(problem, lpmodel, constraintRow, isGainCase, altIdx, critIdx, value) {
+setNotPredefinedMonCharacPointOnConstraintRow = function(problem, lpmodel, constraintRow, isGainCase, chPointIdx, critIdx, value) {
   if (isGainCase) {
-    i = getIndexForDataTypeByCritAndAltIdx(problem, lpmodel, 'NOT_PREDEFINED_MON_CHARACT_POINTS_GAIN_CASE', altIdx, critIdx);
+    i = getIndexForDataTypeByCritAndChPointIdx(problem, lpmodel, 'NOT_PREDEFINED_MON_CHARACT_POINTS_GAIN_CASE', chPointIdx, critIdx);
   } else {
-    i = getIndexForDataTypeByCritAndAltIdx(problem, lpmodel, 'NOT_PREDEFINED_MON_CHARACT_POINTS_COST_CASE', altIdx, critIdx);
+    i = getIndexForDataTypeByCritAndChPointIdx(problem, lpmodel, 'NOT_PREDEFINED_MON_CHARACT_POINTS_COST_CASE', chPointIdx, critIdx);
   }
   constraintRow[i] = value;
   
   return(constraintRow);
 }
 
-getNotPredefinedMonCharacPointFromConstraintRow = function(problem, lpmodel, constraintRow, isGainCase, altIdx, critIdx) {
+getNotPredefinedMonCharacPointFromConstraintRow = function(problem, lpmodel, constraintRow, isGainCase, chPointIdx, critIdx) {
   if (isGainCase) {
-    i = getIndexForDataTypeByCritAndAltIdx(problem, lpmodel, 'NOT_PREDEFINED_MON_CHARACT_POINTS_GAIN_CASE', altIdx, critIdx);
+    i = getIndexForDataTypeByCritAndChPointIdx(problem, lpmodel, 'NOT_PREDEFINED_MON_CHARACT_POINTS_GAIN_CASE', chPointIdx, critIdx);
   } else {
-    i = getIndexForDataTypeByCritAndAltIdx(problem, lpmodel, 'NOT_PREDEFINED_MON_CHARACT_POINTS_COST_CASE', altIdx, critIdx);
+    i = getIndexForDataTypeByCritAndChPointIdx(problem, lpmodel, 'NOT_PREDEFINED_MON_CHARACT_POINTS_COST_CASE', chPointIdx, critIdx);
   }
   return(constraintRow[i]);
 }
