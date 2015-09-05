@@ -64,52 +64,70 @@ getFinalCriteriaTypeForAAndVTypeCase = function(problem, lpmodel, solutionsMat, 
   return(ifelse(isAType, 'GAIN', 'COST'));
 }
 
-solveLP = function(problem, lpmodel) {
-  #for (constraintIdx in 1:length(lpmodel$dir)) {
-  #  if (lpmodel$dir[constraintIdx] == ">") {
-  #    lpmodel$dir[constraintIdx] = ">=";
-  #    lpmodel$rhs[constraintIdx] = lpmodel$rhs[constraintIdx] + problem$eps;
-  #  } else if (lpmodel$dir[constraintIdx] == "<") {
-  #    lpmodel$dir[constraintIdx] = "<=";
-  #    lpmodel$rhs[constraintIdx] = lpmodel$rhs[constraintIdx] - problem$eps;
-  #  }
-  #}
+solveLpRglpk = function(problem, lpmodel) {
   lpresult = Rglpk_solve_LP(lpmodel$obj, lpmodel$mat, lpmodel$dir, lpmodel$rhs, types = lpmodel$types, max = lpmodel$max);
   return(lpresult);
 }
 
-getPossibleAndNecessaryRelations = function(additiveValueFunctions) {
-  possibleRelations = list();
-  necessaryRelations = list();
+solveLpRoi = function(problem, lpmodel) {
+  obj <- L_objective(lpmodel$obj)
+  roiConst <- L_constraint(L=lpmodel$mat, dir=lpmodel$dir, rhs=lpmodel$rhs)
+  lp <- OP(objective=obj, constraints=roiConst, maximum=lpmodel$max, types=lpmodel$types)
+  res <- ROI_solve(lp, .solver)
+  return(list(solution=res$solution, status=res$status$code))
+}
+
+getPossibleAndNecessaryRelations = function(problem, lpmodel, lpresult) {
+  lpmodel = forbidSolution(lpmodel, lpresult$solution);
+  lpmodel$obj = NULL
   
-  for (i in 1:ncol(additiveValueFunctions)) {
-    for (j in 1:ncol(additiveValueFunctions)) {
-      if (i != j) {
-        foundPossibleRelation = FALSE;
-        foundNecessaryRelation = TRUE;
-        
-        for (solIdx in 1:nrow(additiveValueFunctions)) {
-          utilityA = additiveValueFunctions[solIdx, i];
-          utilityB = additiveValueFunctions[solIdx, j];
-          if(utilityA >= utilityB) {
-            foundPossibleRelation = TRUE;
-          }
-          if (utilityB > utilityA) {
-            foundNecessaryRelation = FALSE;
-          }
-        }
-        
-        if (foundPossibleRelation) {
-          possibleRelations = append(possibleRelations, list(c(i, j)));
-        }
-        if (foundNecessaryRelation) {
-          necessaryRelations = append(necessaryRelations, list(c(i, j)));
-        }
+  necessaryRelations = NULL
+  possibleRelations = NULL
+  for (i in 1:problem$alternativesNumber) {
+    for(j in 1:problem$alternativesNumber) {
+      if (checkRelation(lpmodel, i, j, TRUE)) {
+        necessaryRelations = addElementsToMatrix(necessaryRelations, 2, c(i, j))
+      }
+      if (checkRelation(lpmodel, i, j, FALSE)) {
+        possibleRelations = addElementsToMatrix(possibleRelations, 2, c(i, j))
       }
     }
   }
   
   return(list("possible" = possibleRelations, "necessary" = necessaryRelations));
+}
+
+checkRelation = function(lpmodel, left.alternative.idx, right.alternative.idx, necessary) {
+  if (left.alternative.idx == right.alternative.idx) {
+    return(FALSE)
+  }
+  
+  obj = initLpModelMatrixRow(lpmodel);
+  obj = setEpsValueOnConstraintRow(problem, lpmodel, obj, 1)
+  lpmodel$obj = obj
+  lpmodel$max = TRUE
+  
+  constraintRow = initLpModelMatrixRow(lpmodel)
+  if (necessary) {
+    constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, right.alternative.idx, 1)
+    constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, left.alternative.idx, -1)
+    constraintRow = setEpsValueOnConstraintRow(problem, lpmodel, constraintRow, -1)
+  } else {
+    constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, left.alternative.idx, 1)
+    constraintRow = setAlternativeOnConstraintRow(problem, lpmodel, constraintRow, right.alternative.idx, -1)
+    constraintRow = setEpsValueOnConstraintRow(problem, lpmodel, constraintRow, -1)
+  }
+  lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '>=', 0);
+  
+  lpresult = solveLpRglpk(problem, lpmodel)
+  
+  epsValue = getEpsValueFromConstraintRow(problem, lpmodel, lpresult$solution)
+  necessaryCondition = necessary == TRUE && (lpresult$status != 0 || epsValue <= 0)
+  possibleCondition = necessary == FALSE && lpresult$status == 0 && epsValue >= 0
+  if (necessaryCondition || possibleCondition) {
+    return(TRUE)
+  }
+  return(FALSE)
 }
 
 calcAdditiveValueFunctions = function(problem, lpmodel, solutionsMat) {

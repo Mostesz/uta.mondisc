@@ -33,3 +33,8 @@ setEpsValueOnConstraintRow = function(problem, lpmodel, constraintRow, sign) {
   
   return(constraintRow);
 }
+
+getEpsValueFromConstraintRow = function(problem, lpmodel, constraintRow) {
+  i = getLpModelMatrixRowStartIdx(lpmodel, 'EPS')
+  return(constraintRow[i])
+}

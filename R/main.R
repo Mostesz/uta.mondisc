@@ -112,24 +112,20 @@ calcSolution = function(problem) {
   solutionsMat = NULL;
   lpmodelsList = list();
   
-  repeat{
-    lpmodelsList = append(lpmodelsList, lpmodel);
-    
-    lpresult = solveLP(problem, lpmodel);
-    lpmodel = forbidSolution(lpmodel, lpresult$solution);
-    
-    if (lpresult$status != 0) {
-      break;
-    }
+  lpresult = solveLpRglpk(problem, lpmodel);
+  
+  if (lpresult$status != 0) {
+    print('Solution has not been found')
+  } else {
     print('solution:')
-    printSolution(lpmodel, lpresult$solution); #TODO remove it
-    readline() #TODO remove it
-    
-    solutionsMat = addElementsToMatrix(solutionsMat, length(lpresult$solution), lpresult$solution);
+    printSolution(lpmodel, lpresult$solution)
   }
+  
+  solutionsMat = addElementsToMatrix(solutionsMat, length(lpresult$solution), lpresult$solution);
+
   if (!is.null(solutionsMat)) {
     additiveValueFunctions = calcAdditiveValueFunctions(problem, lpmodel, solutionsMat);
-    preferenceRelations = getPossibleAndNecessaryRelations(additiveValueFunctions);
+    preferenceRelations = getPossibleAndNecessaryRelations(problem, lpmodel, lpresult);
     finalCriteriaTypes = getFinalCriteriaTypes(problem, lpmodel, solutionsMat);
     
     return(buildSolution(finalCriteriaTypes, solutionsMat, additiveValueFunctions, preferenceRelations));
@@ -394,4 +390,18 @@ validateDMPreferences = function(strictPreferences, weakPreferences, indifferenc
   return (list(strictPreferences = strictPreferences,
                weakPreferences = weakPreferences,
                indifferences = indifferences))
+}
+
+### CONFIGURATION
+.solver <- NULL
+
+.onLoad <- function(libname, pkgname) {
+  solvers <- ROI_installed_solvers()
+  if (!is.na(solvers['glpk'])) {
+    .solver <<- 'glpk'
+  } else if (!is.na(solvers['symphony'])) {
+    .solver <<- 'symphony'
+  } else {
+    stop("No ROI Symphony or GLPK plugin installed")
+  }
 }

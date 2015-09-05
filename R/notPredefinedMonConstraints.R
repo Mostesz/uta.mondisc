@@ -7,7 +7,7 @@ addNotPredefinedMonConstraintsToLpModel = function(problem, lpmodel, critIdx) {
     constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, FALSE, chPointIdx, critIdx, -1);
     lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '==', 0);
     
-    if (i != 1) {
+    if (chPointIdx != 1) {
       constraintRow = initLpModelMatrixRow(lpmodel);
       constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, chPointIdx, critIdx, 1);
       constraintRow = setNotPredefinedMonCharacPointOnConstraintRow(problem, lpmodel, constraintRow, TRUE, chPointIdx - 1, critIdx, -1);

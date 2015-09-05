@@ -21,6 +21,8 @@ addAAndVTypeMonConstraintsToLpModel = function(problem, lpmodel, isAType, critId
     }
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, chPointIdx, critIdx, 1);
     constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, chPointIdx - 1, critIdx, -1);
+    printSolution(lpmodel, constraintRow)
+    print(dir)
     lpmodel = addConstraintToLpModel(lpmodel, constraintRow, dir, 0);
     
     dir = if (isAType) '<=' else '>=';
@@ -30,6 +32,9 @@ addAAndVTypeMonConstraintsToLpModel = function(problem, lpmodel, isAType, critId
     for (p in 2:chPointIdx) {
       constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, p, critIdx, binAndRhsValue);
     }
+    printSolution(lpmodel, constraintRow)
+    print(dir)
+    print(binAndRhsValue)
     lpmodel = addConstraintToLpModel(lpmodel, constraintRow, dir, binAndRhsValue);
   }
   
@@ -37,11 +42,17 @@ addAAndVTypeMonConstraintsToLpModel = function(problem, lpmodel, isAType, critId
   for (p in 2:levelsNumber) {
     constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, p, critIdx, 1);
   }
+  printSolution(lpmodel, constraintRow)
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', 1);
   
-  constraintRow = initLpModelMatrixRow(lpmodel);
-  constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, 1, critIdx, 1);
-  lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '==', 0);
+  #constraintRow = initLpModelMatrixRow(lpmodel);
+  #constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, 1, critIdx, 1);
+  #printSolution(lpmodel, constraintRow)
+  #lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '==', 0);
+  
+  #constraintRow = initLpModelMatrixRow(lpmodel);
+  #constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, 4, 1, 1);
+  #lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '==', 1);
   
   return(lpmodel);
 }
@@ -63,7 +74,7 @@ addATypeMonNormalizationToLpModel = function(problem, lpmodel, critIdx) {
   constraintRow = setATypeMonNormalizationZeroBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, critIdx, -problem$M);
   constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, 1, critIdx, 1);
   constraintRow = setCharacPointOnConstraintRow(problem, lpmodel, constraintRow, levelsNumber, critIdx, -1);
-  constraintRow = setEpsValueOnConstraintRow(problem, lpmodel, constraintRow, 1)
+  constraintRow = setEpsValueOnConstraintRow(problem, lpmodel, constraintRow, -1)
   lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '>=', -problem$M);
   
   constraintRow = initLpModelMatrixRow(lpmodel);
@@ -97,9 +108,9 @@ addATypeMonNormalizationToLpModel = function(problem, lpmodel, critIdx) {
     constraintRow = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, chPointIdx, critIdx, problem$M);
     lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', problem$M);
     
-    constraintRowNo3 = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRowNo3, chPointIdx, critIdx, 1);
+    constraintRowNo3 = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRowNo3, chPointIdx, critIdx, problem$M);
     
-    constraintRowNo4 = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRowNo4, chPointIdx, critIdx, -1);    
+    constraintRowNo4 = setAAndVTypeMonBinaryVarOnConstraintRow(problem, lpmodel, constraintRowNo4, chPointIdx, critIdx, -problem$M);    
   }
   lpmodel = addConstraintToLpModel(lpmodel, constraintRowNo3, '>=', 0);
   lpmodel = addConstraintToLpModel(lpmodel, constraintRowNo4, '<=', 0);

@@ -24,7 +24,7 @@ addNonMonConstraintsToLpModel = function(problem, lpmodel, critIdx) {
     constraintRow = setMonDirectionBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, chPointIdx, critIdx, -problem$M);
     lpmodel = addConstraintToLpModel(lpmodel, constraintRow, '<=', 0);
     
-    if (i != 2) {
+    if (chPointIdx != 2) {
       constraintRow = initLpModelMatrixRow(lpmodel);
       constraintRow = setMonDirectionBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, chPointIdx, critIdx, 1);
       constraintRow = setMonDirectionBinaryVarOnConstraintRow(problem, lpmodel, constraintRow, chPointIdx - 1, critIdx, -1);
