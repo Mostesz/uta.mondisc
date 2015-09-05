@@ -1,4 +1,4 @@
-Package: utanm
+Package: utaum
 Type: Package
 Title: Inferring additive value functions with unknown monotonicity
 Version: 0.1-1
@@ -7,6 +7,6 @@ Author: Jakub Wasikowski
 Maintainer: Jakub Wasikowski <jakub.wasikowski@gmail.com>
 URL: https://github.com/Mostesz/uta-nm
 Depends: Rglpk, sets, ROI, ROI.plugin.glpk
-Description: UTA-NM: Inferring additive value functions with unknown monotonicity
+Description: UTA-UM: Inferring additive value functions with unknown monotonicity
 License: file LICENSE
 Suggests: testthat
