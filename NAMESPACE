@@ -5,4 +5,3 @@ import(sets)
 
 export(buildProblem)
 export(calcSolution)
-export(initLpModel)

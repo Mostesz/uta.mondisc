@@ -85,10 +85,10 @@ getPossibleAndNecessaryRelations = function(problem, lpmodel, lpresult) {
   possibleRelations = NULL
   for (i in 1:problem$alternativesNumber) {
     for(j in 1:problem$alternativesNumber) {
-      if (checkRelation(lpmodel, i, j, TRUE)) {
+      if (checkRelation(problem, lpmodel, i, j, TRUE)) {
         necessaryRelations = addElementsToMatrix(necessaryRelations, 2, c(i, j))
       }
-      if (checkRelation(lpmodel, i, j, FALSE)) {
+      if (checkRelation(problem, lpmodel, i, j, FALSE)) {
         possibleRelations = addElementsToMatrix(possibleRelations, 2, c(i, j))
       }
     }
@@ -97,7 +97,7 @@ getPossibleAndNecessaryRelations = function(problem, lpmodel, lpresult) {
   return(list("possible" = possibleRelations, "necessary" = necessaryRelations));
 }
 
-checkRelation = function(lpmodel, left.alternative.idx, right.alternative.idx, necessary) {
+checkRelation = function(problem, lpmodel, left.alternative.idx, right.alternative.idx, necessary) {
   if (left.alternative.idx == right.alternative.idx) {
     return(FALSE)
   }

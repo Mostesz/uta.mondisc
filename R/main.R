@@ -5,7 +5,7 @@
 #' @param alternatives Matrix of alternatives values for criteria.
 #' Criteria arranged in columns, alternatives in rows.
 #' Number of alternatives (rows) must be greater than 3.
-#' Number of criteria (columns) must be greater than 1.
+#' Number of criteria (columns) must be greater or equals 1.
 #' @param margValueFuncShapes Vector of criterion types, which correspond to each criterion.
 #' Each value of vector must be one of either "GAIN", "COST", "NOT_PREDEFINED",
 #' "A_TYPE", "V_TYPE", "NON_MON", which represent knowledge about the monotonicity for criteria, 
@@ -16,6 +16,7 @@
 #' of evaluation scale (V_TYPE) and criterion with no prior information on the monotonicity (NON_MON). 
 #' Index of each type must correspond to index of column of the criterion in alternatives matrix.
 #' @param M Big positive numeric value which is much greater that any value of each alternative.
+#' @param eps small positive numeric value.
 #' @param strictPreferences Matrix of the strict preferences provided by DM. Each row represents
 #' comparision between two alternatives and it means that alternative provided in the first 
 #' column is strictly preferred over alternative provided in the second column. Value of each matrix 
@@ -36,6 +37,7 @@
 #'                         120, 800,   13,  105,  360,  809), ncol = 6, byrow=TRUE);
 #' margValueFuncShapes = c("GAIN", "COST", "NOT_PREDEFINED", "A_TYPE", "V_TYPE", "NON_MON");
 #' M = 1000000;
+#' eps = 0.001;
 #' 
 #' strictPreferences = matrix(c(1,2), ncol=2, byrow=TRUE);
 #' weakPreferences = matrix(c(2,3), ncol=2, byrow=TRUE);
@@ -45,6 +47,7 @@
 #'   alternatives,
 #'   margValueFuncShapes,
 #'   M,
+#'   eps,
 #'   strictPreferences = strictPreferences,
 #'   weakPreferences = weakPreferences,
 #'   indifferences = indifferences
@@ -80,7 +83,7 @@ buildProblem = function(alternatives, margValueFuncShapes, M, eps, strictPrefere
 #' This function allows to calculate solution of the problem
 #' 
 #' @param problem Instance of the problem
-#' @return Result of the LP calculation
+#' @return Results of the LP calculation
 #' @examples
 #' alternatives = matrix(c(100, 1000,  9,   110,  300,  800,
 #'                         90,  1100,  11,  120,  310,  801,
