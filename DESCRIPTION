@@ -4,8 +4,8 @@ Title: Inferring additive value functions with unknown monotonicity
 Version: 0.1-1
 Date: 2014-08-02
 Author: Jakub Wasikowski
-Maintainer: Jakub Wasikowski <jakub.wasikowski@gmail.com>
-URL: https://github.com/Mostesz/uta-nm
+Maintainer: Jakub Wąsikowski <jakub.wasikowski@gmail.com>
+URL: https://github.com/jakubwasikowski/uta-um
 Depends: Rglpk, sets, ROI, ROI.plugin.glpk
 Description: UTA-UM: Inferring additive value functions with unknown monotonicity
 License: file LICENSE
